@@ -652,6 +652,7 @@
     import { onAuthStateUpdate, resetPassword } from './assets/js/auth.js';
     import { db, doc, updateDoc, updateProfile, runTransaction, getDoc } from './assets/js/firebase-config.js';
     import { BANGLADESH_LOCATIONS } from './assets/js/locations.js';
+    import { uploadMediaFile } from './assets/js/admin.js';
 
     let activeUser = null;
     let activeProfile = null;
@@ -882,16 +883,19 @@
 
       try {
         if (uploadedPhotoFile) {
-          const formData = new FormData();
-          formData.append('file', uploadedPhotoFile);
-          formData.append('upload_preset', 'Bangla Bazar');
-          const res = await fetch('https://api.cloudinary.com/v1_1/vhc6a9gy/image/upload', {
-            method: 'POST',
-            body: formData
-          });
-          if (res.ok) {
-            const data = await res.json();
-            if (data.secure_url) photoURL = data.secure_url;
+          try {
+            const uploadedUrl = await uploadMediaFile(uploadedPhotoFile, 'profiles');
+            if (uploadedUrl) {
+              photoURL = uploadedUrl;
+            } else {
+              throw new Error('Valid Cloudinary secure_url was not returned');
+            }
+          } catch (photoUploadErr) {
+            console.error('Profile photo upload error:', photoUploadErr);
+            alert('ছবি আপলোড ব্যর্থ হয়েছে, আবার চেষ্টা করুন (' + (photoUploadErr.message || 'Cloudinary error') + ')');
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = 'Save Changes';
+            return;
           }
         }
 

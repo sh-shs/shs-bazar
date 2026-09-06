@@ -326,43 +326,60 @@ export async function compressImage(file, maxDimension = 1200, quality = 0.85) {
   });
 }
 
-export async function uploadMediaFile(file, folderPath = 'products/images', timeoutMs = 15000) {
+export async function uploadMediaFile(file, folderPath = 'products/images', timeoutMs = 25000) {
   if (!file) return null;
 
-  const uploadFile = file.type && file.type.startsWith('image/') ? await compressImage(file) : file;
+  console.log(`Starting Cloudinary upload for file "${file.name}" (${file.type || 'unknown type'}, ${(file.size / 1024).toFixed(1)} KB) to folder "${folderPath}"...`);
+
+  let uploadFile = file;
+  try {
+    if (file.type && file.type.startsWith('image/')) {
+      uploadFile = await compressImage(file);
+    }
+  } catch (compressErr) {
+    console.warn('Image compression warning, proceeding with original file:', compressErr);
+    uploadFile = file;
+  }
 
   const formData = new FormData();
   formData.append('file', uploadFile);
   formData.append('upload_preset', 'Bangla Bazar');
+  if (folderPath) {
+    formData.append('folder', folderPath);
+  }
+
   const isVideo = uploadFile.type && uploadFile.type.startsWith('video');
   const resourceType = isVideo ? 'video' : 'image';
+  const endpoint = `https://api.cloudinary.com/v1_1/vhc6a9gy/${resourceType}/upload`;
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
-    const res = await fetch(`https://api.cloudinary.com/v1_1/vhc6a9gy/${resourceType}/upload`, {
+    const res = await fetch(endpoint, {
       method: 'POST',
       body: formData,
       signal: controller.signal
     });
     clearTimeout(timeoutId);
 
-    if (res.ok) {
-      const data = await res.json();
-      if (data.secure_url) {
-        console.log('Cloudinary upload successful:', data.secure_url);
-        return data.secure_url;
-      }
+    const resData = await res.json().catch(() => ({}));
+
+    if (res.ok && resData.secure_url) {
+      console.log('Cloudinary upload successful:', resData.secure_url);
+      return resData.secure_url;
     }
-    const errData = await res.json().catch(() => ({}));
-    const errorMsg = errData.error?.message || `Upload HTTP error ${res.status}`;
-    console.error('Cloudinary upload response error:', errorMsg);
+
+    const errorMsg = resData.error?.message || `Cloudinary HTTP error ${res.status}`;
+    console.error('Cloudinary upload API error response:', { status: res.status, errorMsg, resData });
     throw new Error(errorMsg);
   } catch (e) {
     clearTimeout(timeoutId);
-    console.error('Cloudinary upload exception:', e);
-    throw new Error(`Cloudinary upload failed: ${e.message}`);
+    console.error('Cloudinary upload exception for file:', file.name, e);
+    if (e.name === 'AbortError') {
+      throw new Error(`Cloudinary upload timed out after ${timeoutMs / 1000} seconds. Please check your network connection.`);
+    }
+    throw new Error(e.message || 'Network error during Cloudinary upload');
   }
 }
 

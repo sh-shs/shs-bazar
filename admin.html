@@ -1552,10 +1552,14 @@
         if (imageFiles.length > 0) {
           try {
             const uploadPromises = Array.from(imageFiles).map(file => uploadMediaFile(file, 'products/images'));
-            imageUrls = await Promise.all(uploadPromises);
+            const results = await Promise.all(uploadPromises);
+            imageUrls = results.filter(url => typeof url === 'string' && url.trim().startsWith('http'));
+            if (imageUrls.length === 0) {
+              throw new Error('No valid image URL returned from Cloudinary');
+            }
           } catch (uploadErr) {
-            console.error('Image upload failed:', uploadErr);
-            showToast('Image upload failed! Please check your network and try again: ' + (uploadErr.message || 'Cloudinary error'));
+            console.error('Product image upload failed:', uploadErr);
+            showToast('ছবি আপলোড ব্যর্থ হয়েছে, আবার চেষ্টা করুন (' + (uploadErr.message || 'Cloudinary upload error') + ')');
             btn.disabled = false;
             btn.textContent = 'Save Product';
             return;
@@ -1569,7 +1573,7 @@
             videoUrl = await uploadMediaFile(videoFile, 'products/videos');
           } catch (videoErr) {
             console.error('Video upload failed:', videoErr);
-            showToast('Video upload failed: ' + (videoErr.message || 'Cloudinary error'));
+            showToast('ভিডিও আপলোড ব্যর্থ হয়েছে: ' + (videoErr.message || 'Cloudinary upload error'));
             btn.disabled = false;
             btn.textContent = 'Save Product';
             return;
@@ -1580,8 +1584,8 @@
         const existingProduct = productId ? adminState.products.find(p => p.id === productId) : null;
 
         const finalImages = imageUrls.length > 0 ? imageUrls : (existingProduct?.images || []);
-        if (finalImages.length === 0) {
-          showToast('At least one product image is required. Please upload an image.');
+        if (!finalImages || finalImages.length === 0) {
+          showToast('ছবি আপলোড ব্যর্থ হয়েছে, আবার চেষ্টা করুন। অন্তত একটা ছবি যুক্ত করা আবশ্যক।');
           btn.disabled = false;
           btn.textContent = 'Save Product';
           return;
@@ -1842,8 +1846,20 @@
       try {
         const imageFile = document.getElementById('cat-image-file')?.files[0];
         if (imageFile) {
-          const uploadedUrl = await uploadMediaFile(imageFile, 'categories').catch(() => null);
-          if (uploadedUrl) image = uploadedUrl;
+          try {
+            const uploadedUrl = await uploadMediaFile(imageFile, 'categories');
+            if (uploadedUrl) {
+              image = uploadedUrl;
+            } else {
+              throw new Error('Valid Cloudinary secure_url was not returned');
+            }
+          } catch (catUploadErr) {
+            console.error('Category image upload error:', catUploadErr);
+            showToast('ছবি আপলোড ব্যর্থ হয়েছে, আবার চেষ্টা করুন (' + (catUploadErr.message || 'Cloudinary error') + ')');
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Save Category';
+            return;
+          }
         }
 
         const categoryPayload = {

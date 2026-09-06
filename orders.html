@@ -553,9 +553,18 @@
         let uploadedUrls = [...existingReviewImageUrls];
 
         if (pendingUploadPhotos.length > 0) {
-          const uploads = pendingUploadPhotos.map(file => uploadMediaFile(file, 'reviews'));
-          const newUrls = await Promise.all(uploads);
-          uploadedUrls = uploadedUrls.concat(newUrls.filter(Boolean));
+          try {
+            const uploads = pendingUploadPhotos.map(file => uploadMediaFile(file, 'reviews'));
+            const newUrls = await Promise.all(uploads);
+            const validNewUrls = newUrls.filter(url => typeof url === 'string' && url.trim().startsWith('http'));
+            uploadedUrls = uploadedUrls.concat(validNewUrls);
+          } catch (reviewImgErr) {
+            console.error('Review photos upload failed:', reviewImgErr);
+            showToast('ছবি আপলোড ব্যর্থ হয়েছে, আবার চেষ্টা করুন (' + (reviewImgErr.message || 'Cloudinary error') + ')');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Review';
+            return;
+          }
         }
 
         const customerName = currentUserProfile?.displayName || currentUserObj.displayName || 'Customer';
