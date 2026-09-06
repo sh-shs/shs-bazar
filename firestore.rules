@@ -32,6 +32,20 @@ service cloud.firestore {
       allow delete: if isSuperAdmin();
     }
 
+    // Usernames collection (for unique handle reservations)
+    match /usernames/{usernameDoc} {
+      allow read: if true;
+      allow create, update: if isSignedIn() && (
+        !exists(/databases/$(database)/documents/usernames/$(usernameDoc)) ||
+        resource.data.uid == request.auth.uid ||
+        isSuperAdmin()
+      );
+      allow delete: if isSignedIn() && (
+        resource.data.uid == request.auth.uid ||
+        isSuperAdmin()
+      );
+    }
+
     // Products collection
     match /products/{productId} {
       allow read: if true;

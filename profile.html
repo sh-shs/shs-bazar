@@ -214,6 +214,10 @@
           <span id="profile-name" class="profile-name">Loading...</span>
           <span id="profile-role-badge" style="font-size: 0.68rem; background: var(--primary-light); color: var(--primary-color); padding: 2px 7px; border-radius: 12px; font-weight: 800; text-transform: uppercase;">Customer</span>
         </div>
+        <div id="profile-username-wrap" class="profile-meta-text" style="display: none; font-weight: 700; color: var(--primary-color);">
+          <i class="fas fa-at" style="color: var(--primary-color);"></i>
+          <span id="profile-username"></span>
+        </div>
         <div class="profile-meta-text">
           <i class="far fa-envelope" style="color: var(--accent-color);"></i>
           <span id="profile-email">...</span>
@@ -390,6 +394,15 @@
       document.getElementById('profile-email').textContent = email;
       document.getElementById('profile-phone').textContent = phone;
       document.getElementById('profile-role-badge').textContent = activeProfile?.role || 'Customer';
+
+      const usernameWrap = document.getElementById('profile-username-wrap');
+      const usernameEl = document.getElementById('profile-username');
+      if (activeProfile?.username) {
+        usernameEl.textContent = activeProfile.username;
+        usernameWrap.style.display = 'flex';
+      } else {
+        usernameWrap.style.display = 'none';
+      }
 
       const imgEl = document.getElementById('profile-avatar-img');
       const letterEl = document.getElementById('profile-avatar-letter');

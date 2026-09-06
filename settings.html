@@ -297,6 +297,20 @@
         </div>
 
         <div class="form-group">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <label class="form-label" style="margin-bottom: 0;">Username *</label>
+            <span id="username-status-badge" style="font-size: 0.75rem; font-weight: 700; display: none;"></span>
+          </div>
+          <div style="position: relative; display: flex; align-items: center;">
+            <span style="position: absolute; left: 12px; color: var(--text-muted); font-weight: 700; font-size: 0.95rem; pointer-events: none; user-select: none;">@</span>
+            <input type="text" id="edit-username" class="form-control" placeholder="username" minlength="3" maxlength="20" required style="padding-left: 28px;" oninput="handleUsernameInput(this)">
+          </div>
+          <small style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-top: 4px;">
+            শুধু ইংরেজি অক্ষর, সংখ্যা ও আন্ডারস্কোর (_) ব্যবহার করা যাবে, স্পেস দেওয়া যাবে না
+          </small>
+        </div>
+
+        <div class="form-group">
           <label class="form-label">Phone Number</label>
           <input type="tel" id="edit-phone" class="form-control" placeholder="017xxxxxxxx">
         </div>
@@ -634,7 +648,7 @@
   <script type="module" src="assets/js/app.js"></script>
   <script type="module">
     import { onAuthStateUpdate, resetPassword } from './assets/js/auth.js';
-    import { db, doc, updateDoc, updateProfile } from './assets/js/firebase-config.js';
+    import { db, doc, updateDoc, updateProfile, runTransaction, getDoc } from './assets/js/firebase-config.js';
     import { BANGLADESH_LOCATIONS } from './assets/js/locations.js';
 
     let activeUser = null;
@@ -678,6 +692,61 @@
         imgPreview.style.display = 'none';
         letterPreview.style.display = 'flex';
       }
+    };
+
+    // Real-time Username Input & Validation Helper
+    let usernameCheckTimeout = null;
+
+    window.handleUsernameInput = (input) => {
+      let val = input.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
+      if (val.length > 20) val = val.slice(0, 20);
+      input.value = val;
+
+      const statusBadge = document.getElementById('username-status-badge');
+      if (!statusBadge) return;
+
+      if (usernameCheckTimeout) clearTimeout(usernameCheckTimeout);
+
+      if (!val) {
+        statusBadge.style.display = 'none';
+        return;
+      }
+
+      if (val.length < 3) {
+        statusBadge.style.display = 'inline-block';
+        statusBadge.style.color = '#EF4444';
+        statusBadge.textContent = '❌ Too short (min 3 chars)';
+        return;
+      }
+
+      const currentUsername = (activeProfile?.username || '').toLowerCase();
+      if (val === currentUsername) {
+        statusBadge.style.display = 'inline-block';
+        statusBadge.style.color = '#10B981';
+        statusBadge.textContent = '✅ Available';
+        return;
+      }
+
+      statusBadge.style.display = 'inline-block';
+      statusBadge.style.color = 'var(--text-muted)';
+      statusBadge.textContent = '⏳ Checking...';
+
+      usernameCheckTimeout = setTimeout(async () => {
+        try {
+          const usernameDocRef = doc(db, 'usernames', val);
+          const snap = await getDoc(usernameDocRef);
+          if (snap.exists() && snap.data().uid !== activeUser?.uid) {
+            statusBadge.style.color = '#EF4444';
+            statusBadge.textContent = '❌ Already taken';
+          } else {
+            statusBadge.style.color = '#10B981';
+            statusBadge.textContent = '✅ Available';
+          }
+        } catch (err) {
+          console.error('Error checking username availability:', err);
+          statusBadge.style.display = 'none';
+        }
+      }, 400);
     };
 
     // Copy Profile Image URL Helper
@@ -740,8 +809,19 @@
       saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
 
       const displayName = document.getElementById('edit-display-name').value.trim();
+      const usernameInput = document.getElementById('edit-username');
+      let rawUsername = usernameInput.value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
       const phone = document.getElementById('edit-phone').value.trim();
       let photoURL = document.getElementById('edit-photo-url').value.trim();
+
+      if (!rawUsername || rawUsername.length < 3 || rawUsername.length > 20) {
+        alert('ইউজারনেম অবশ্যই ৩ থেকে ২০ ক্যারেক্টারের মধ্যে হতে হবে (শুধুমাত্র ইংরেজি অক্ষর, সংখ্যা ও আন্ডারস্কোর)।');
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = 'Save Changes';
+        return;
+      }
+
+      const oldUsername = (activeProfile?.username || '').toLowerCase();
 
       try {
         if (uploadedPhotoFile) {
@@ -758,17 +838,42 @@
           }
         }
 
-        await updateProfile(activeUser, { displayName, photoURL });
+        // Run Firestore transaction for atomic username reservation
+        await runTransaction(db, async (transaction) => {
+          const userRef = doc(db, 'users', activeUser.uid);
+          const newUsernameRef = doc(db, 'usernames', rawUsername);
+          const oldUsernameRef = oldUsername && oldUsername !== rawUsername ? doc(db, 'usernames', oldUsername) : null;
 
-        await updateDoc(doc(db, 'users', activeUser.uid), {
-          displayName,
-          phone,
-          photoURL,
-          updatedAt: new Date()
+          if (rawUsername !== oldUsername) {
+            const newDocSnap = await transaction.get(newUsernameRef);
+            if (newDocSnap.exists() && newDocSnap.data().uid !== activeUser.uid) {
+              throw new Error('USERNAME_TAKEN');
+            }
+
+            if (oldUsernameRef) {
+              transaction.delete(oldUsernameRef);
+            }
+
+            transaction.set(newUsernameRef, {
+              uid: activeUser.uid,
+              createdAt: new Date()
+            });
+          }
+
+          transaction.update(userRef, {
+            displayName,
+            username: rawUsername,
+            phone,
+            photoURL,
+            updatedAt: new Date()
+          });
         });
+
+        await updateProfile(activeUser, { displayName, photoURL });
 
         if (activeProfile) {
           activeProfile.displayName = displayName;
+          activeProfile.username = rawUsername;
           activeProfile.phone = phone;
           activeProfile.photoURL = photoURL;
         }
@@ -777,7 +882,11 @@
         populateProfileForm();
       } catch (err) {
         console.error('Error updating profile:', err);
-        alert('Failed to update profile: ' + err.message);
+        if (err.message === 'USERNAME_TAKEN') {
+          alert('এই ইউজারনেমটি ইতিমধ্যে ব্যবহৃত হচ্ছে, অন্য একটি চেষ্টা করুন');
+        } else {
+          alert('Failed to update profile: ' + err.message);
+        }
       } finally {
         saveBtn.disabled = false;
         saveBtn.innerHTML = 'Save Changes';
@@ -1062,6 +1171,7 @@
     function populateProfileForm() {
       if (!activeUser) return;
       document.getElementById('edit-display-name').value = activeProfile?.displayName || activeUser.displayName || '';
+      document.getElementById('edit-username').value = activeProfile?.username || '';
       document.getElementById('edit-phone').value = activeProfile?.phone || activeUser.phoneNumber || '';
       document.getElementById('edit-email').value = activeUser.email || '';
       document.getElementById('edit-photo-url').value = activeProfile?.photoURL || activeUser.photoURL || '';
@@ -1080,6 +1190,11 @@
         imgPreview.style.display = 'none';
         letterPreview.textContent = initial;
         letterPreview.style.display = 'flex';
+      }
+
+      const usernameInput = document.getElementById('edit-username');
+      if (usernameInput && usernameInput.value) {
+        window.handleUsernameInput(usernameInput);
       }
     }
 
