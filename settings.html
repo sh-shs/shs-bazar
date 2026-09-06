@@ -707,12 +707,22 @@
 
       if (usernameCheckTimeout) clearTimeout(usernameCheckTimeout);
 
-      // Remove leading '@' and leading spaces if typed by user
-      if (input.value.startsWith('@')) {
-        input.value = input.value.replace(/^@\s*/, '');
+      // Filter input to allow ONLY lowercase english letters (a-z), digits (0-9), and underscore (_)
+      // Uppercase letters (A-Z), spaces, special characters, Bengali, emojis etc. are directly dropped without auto-converting
+      const startPos = input.selectionStart;
+      const initialVal = input.value;
+      const sanitizedVal = initialVal.replace(/[^a-z0-9_]/g, '');
+
+      if (initialVal !== sanitizedVal) {
+        const diff = initialVal.length - sanitizedVal.length;
+        input.value = sanitizedVal;
+        if (startPos !== null) {
+          const newPos = Math.max(0, startPos - diff);
+          input.setSelectionRange(newPos, newPos);
+        }
       }
 
-      let rawVal = input.value.trim();
+      let val = input.value;
 
       const showError = (msg) => {
         if (iconStatus) iconStatus.innerHTML = '<i class="fas fa-times-circle" style="color: #EF4444;"></i>';
@@ -734,14 +744,12 @@
         input.style.borderColor = '';
       };
 
-      if (!rawVal) {
+      if (!val) {
         if (iconStatus) iconStatus.innerHTML = '';
         clearError();
         if (saveBtn) saveBtn.disabled = false;
         return;
       }
-
-      let val = rawVal.toLowerCase();
 
       // Check format rules: 3-20 characters, lowercase alphanumeric & underscore only
       const validCharsRegex = /^[a-z0-9_]+$/;
