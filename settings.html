@@ -786,7 +786,8 @@
 
           const usernameDocRef = doc(db, 'usernames', val);
           const snap = await getDoc(usernameDocRef);
-          if (snap.exists() && snap.data().uid !== activeUser?.uid) {
+          const docOwnerId = snap.exists() ? (snap.data().userId || snap.data().uid) : null;
+          if (snap.exists() && docOwnerId !== activeUser?.uid) {
             showError('এই ইউজারনেমটি ইতিমধ্যে ব্যবহৃত হচ্ছে');
           } else {
             if (iconStatus) iconStatus.innerHTML = '<i class="fas fa-check-circle" style="color: #10B981;"></i>';
@@ -894,6 +895,8 @@
           }
         }
 
+        console.log('[handleSaveProfile] Starting transaction update...', { uid: activeUser.uid, rawUsername, oldUsername });
+
         // Run Firestore transaction for atomic username reservation
         await runTransaction(db, async (transaction) => {
           const userRef = doc(db, 'users', activeUser.uid);
@@ -902,20 +905,27 @@
 
           if (rawUsername !== oldUsername) {
             const newDocSnap = await transaction.get(newUsernameRef);
-            if (newDocSnap.exists() && newDocSnap.data().uid !== activeUser.uid) {
-              throw new Error('USERNAME_TAKEN');
+            if (newDocSnap.exists()) {
+              const existingOwner = newDocSnap.data().userId || newDocSnap.data().uid;
+              if (existingOwner !== activeUser.uid) {
+                throw new Error('USERNAME_TAKEN');
+              }
             }
 
             if (oldUsernameRef) {
+              console.log('[handleSaveProfile] Transaction: deleting old username doc', oldUsername);
               transaction.delete(oldUsernameRef);
             }
 
+            console.log('[handleSaveProfile] Transaction: creating new username doc', rawUsername);
             transaction.set(newUsernameRef, {
+              userId: activeUser.uid,
               uid: activeUser.uid,
               createdAt: new Date()
             });
           }
 
+          console.log('[handleSaveProfile] Transaction: updating user doc', activeUser.uid);
           transaction.update(userRef, {
             displayName,
             username: rawUsername,
