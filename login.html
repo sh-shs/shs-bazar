@@ -12,8 +12,11 @@
 <body>
   <!-- Loading Screen before Auth State Resolves -->
   <div id="auth-loading-screen" class="auth-loading-screen">
-    <div class="auth-loading-spinner"></div>
-    <div class="auth-loading-text">Loading account status...</div>
+    <div class="auth-loading-card">
+      <img src="assets/images/logo.png" alt="SHS Bazar Logo" class="auth-loading-logo">
+      <div class="auth-loading-spinner"></div>
+      <div class="auth-loading-text">Loading account status...</div>
+    </div>
   </div>
 
   <div id="login-page-content" style="display: none;">
@@ -97,7 +100,10 @@
         }
 
         // Guest user - hide loading spinner and show login form
-        if (loadingEl) loadingEl.classList.add('hidden');
+        if (loadingEl) {
+          loadingEl.classList.add('hidden');
+          loadingEl.style.display = 'none';
+        }
         if (contentEl) contentEl.style.display = 'block';
       });
 

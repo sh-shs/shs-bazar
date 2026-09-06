@@ -245,8 +245,11 @@
 <body>
   <!-- Loading Screen before Auth State Resolves -->
   <div id="auth-loading-screen" class="auth-loading-screen">
-    <div class="auth-loading-spinner"></div>
-    <div class="auth-loading-text">Loading settings...</div>
+    <div class="auth-loading-card">
+      <img src="assets/images/logo.png" alt="SHS Bazar Logo" class="auth-loading-logo">
+      <div class="auth-loading-spinner"></div>
+      <div class="auth-loading-text">Loading settings...</div>
+    </div>
   </div>
 
   <div id="settings-page-content" style="display: none;">
@@ -1084,7 +1087,13 @@
       const loadingEl = document.getElementById('auth-loading-screen');
       const contentEl = document.getElementById('settings-page-content');
 
+      if (loadingEl) {
+        loadingEl.classList.add('hidden');
+        loadingEl.style.display = 'none';
+      }
+
       if (!user && !window.isTestEnv) {
+        if (contentEl) contentEl.style.display = 'none';
         window.location.replace('login.html');
         return;
       }
@@ -1092,7 +1101,6 @@
       activeProfile = profile || { displayName: 'Test User', photoURL: 'https://example.com/current.jpg' };
       populateProfileForm();
 
-      if (loadingEl) loadingEl.classList.add('hidden');
       if (contentEl) contentEl.style.display = 'block';
     });
   </script>
