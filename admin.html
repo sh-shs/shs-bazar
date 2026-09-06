@@ -1550,19 +1550,44 @@
         let imageUrls = [];
 
         if (imageFiles.length > 0) {
-          const uploadPromises = Array.from(imageFiles).map(file => uploadMediaFile(file, 'products/images').catch(() => null));
-          const results = await Promise.all(uploadPromises);
-          imageUrls = results.filter(Boolean);
+          try {
+            const uploadPromises = Array.from(imageFiles).map(file => uploadMediaFile(file, 'products/images'));
+            imageUrls = await Promise.all(uploadPromises);
+          } catch (uploadErr) {
+            console.error('Image upload failed:', uploadErr);
+            showToast('Image upload failed! Please check your network and try again: ' + (uploadErr.message || 'Cloudinary error'));
+            btn.disabled = false;
+            btn.textContent = 'Save Product';
+            return;
+          }
         }
 
         const videoFile = document.getElementById('adm-p-video').files[0];
         let videoUrl = null;
         if (videoFile) {
-          videoUrl = await uploadMediaFile(videoFile, 'products/videos').catch(() => null);
+          try {
+            videoUrl = await uploadMediaFile(videoFile, 'products/videos');
+          } catch (videoErr) {
+            console.error('Video upload failed:', videoErr);
+            showToast('Video upload failed: ' + (videoErr.message || 'Cloudinary error'));
+            btn.disabled = false;
+            btn.textContent = 'Save Product';
+            return;
+          }
         }
 
         const productId = document.getElementById('adm-p-id').value || null;
         const existingProduct = productId ? adminState.products.find(p => p.id === productId) : null;
+
+        const finalImages = imageUrls.length > 0 ? imageUrls : (existingProduct?.images || []);
+        if (finalImages.length === 0) {
+          showToast('At least one product image is required. Please upload an image.');
+          btn.disabled = false;
+          btn.textContent = 'Save Product';
+          return;
+        }
+
+        console.log('Saving product with images:', finalImages);
 
         const productPayload = {
           name,
@@ -1584,7 +1609,7 @@
           isTrending: document.getElementById('adm-flag-trending').checked,
           isBestSeller: document.getElementById('adm-flag-bestseller').checked,
           sellerId: existingProduct ? existingProduct.sellerId || 'admin' : 'admin',
-          images: imageUrls.length > 0 ? imageUrls : (existingProduct?.images || ['https://via.placeholder.com/400?text=SHS+Bazar'])
+          images: finalImages
         };
 
         if (videoUrl) productPayload.video = videoUrl;
