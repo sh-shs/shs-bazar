@@ -303,9 +303,11 @@
           </div>
           <div style="position: relative; display: flex; align-items: center;">
             <span style="position: absolute; left: 12px; color: var(--text-muted); font-weight: 700; font-size: 0.95rem; pointer-events: none; user-select: none;">@</span>
-            <input type="text" id="edit-username" class="form-control" placeholder="username" minlength="3" maxlength="20" required style="padding-left: 28px;" oninput="handleUsernameInput(this)">
+            <input type="text" id="edit-username" class="form-control" placeholder="username" minlength="3" maxlength="20" required style="padding-left: 28px; padding-right: 36px;" oninput="handleUsernameInput(this)">
+            <span id="username-icon-status" style="position: absolute; right: 12px; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; pointer-events: none;"></span>
           </div>
-          <small style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-top: 4px;">
+          <small id="username-error-msg" style="font-size: 0.72rem; color: #EF4444; display: none; margin-top: 4px; font-weight: 600;"></small>
+          <small id="username-hint-msg" style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-top: 4px;">
             শুধু ইংরেজি অক্ষর, সংখ্যা ও আন্ডারস্কোর (_) ব্যবহার করা যাবে, স্পেস দেওয়া যাবে না
           </small>
         </div>
@@ -698,55 +700,97 @@
     let usernameCheckTimeout = null;
 
     window.handleUsernameInput = (input) => {
-      let val = input.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
-      if (val.length > 20) val = val.slice(0, 20);
-      input.value = val;
-
-      const statusBadge = document.getElementById('username-status-badge');
-      if (!statusBadge) return;
+      const iconStatus = document.getElementById('username-icon-status');
+      const errorMsg = document.getElementById('username-error-msg');
+      const hintMsg = document.getElementById('username-hint-msg');
+      const saveBtn = document.getElementById('save-profile-btn');
 
       if (usernameCheckTimeout) clearTimeout(usernameCheckTimeout);
 
-      if (!val) {
-        statusBadge.style.display = 'none';
+      // Remove leading '@' and leading spaces if typed by user
+      if (input.value.startsWith('@')) {
+        input.value = input.value.replace(/^@\s*/, '');
+      }
+
+      let rawVal = input.value.trim();
+
+      const showError = (msg) => {
+        if (iconStatus) iconStatus.innerHTML = '<i class="fas fa-times-circle" style="color: #EF4444;"></i>';
+        if (errorMsg) {
+          errorMsg.textContent = msg;
+          errorMsg.style.display = 'block';
+        }
+        if (hintMsg) hintMsg.style.display = 'none';
+        input.style.borderColor = '#EF4444';
+        if (saveBtn) saveBtn.disabled = true;
+      };
+
+      const clearError = () => {
+        if (errorMsg) {
+          errorMsg.textContent = '';
+          errorMsg.style.display = 'none';
+        }
+        if (hintMsg) hintMsg.style.display = 'block';
+        input.style.borderColor = '';
+      };
+
+      if (!rawVal) {
+        if (iconStatus) iconStatus.innerHTML = '';
+        clearError();
+        if (saveBtn) saveBtn.disabled = false;
+        return;
+      }
+
+      let val = rawVal.toLowerCase();
+
+      // Check format rules: 3-20 characters, lowercase alphanumeric & underscore only
+      const validCharsRegex = /^[a-z0-9_]+$/;
+      if (!validCharsRegex.test(val)) {
+        showError('শুধু ইংরেজি অক্ষর, সংখ্যা ও আন্ডারস্কোর ব্যবহার করা যাবে');
         return;
       }
 
       if (val.length < 3) {
-        statusBadge.style.display = 'inline-block';
-        statusBadge.style.color = '#EF4444';
-        statusBadge.textContent = '❌ Too short (min 3 chars)';
+        showError('ইউজারনেম অন্তত ৩ ক্যারেক্টার হতে হবে');
         return;
       }
 
-      const currentUsername = (activeProfile?.username || '').toLowerCase();
-      if (val === currentUsername) {
-        statusBadge.style.display = 'inline-block';
-        statusBadge.style.color = '#10B981';
-        statusBadge.textContent = '✅ Available';
+      if (val.length > 20) {
+        showError('ইউজারনেম সর্বোচ্চ ২০ ক্যারেক্টার হতে পারে');
         return;
       }
 
-      statusBadge.style.display = 'inline-block';
-      statusBadge.style.color = 'var(--text-muted)';
-      statusBadge.textContent = '⏳ Checking...';
+      // Valid format: show loading spinner and start 500ms debounce check
+      if (iconStatus) iconStatus.innerHTML = '<i class="fas fa-spinner fa-spin" style="color: var(--text-muted);"></i>';
+      clearError();
+      if (saveBtn) saveBtn.disabled = false;
 
       usernameCheckTimeout = setTimeout(async () => {
         try {
+          const currentUsername = (activeProfile?.username || '').toLowerCase();
+          if (val === currentUsername) {
+            if (iconStatus) iconStatus.innerHTML = '<i class="fas fa-check-circle" style="color: #10B981;"></i>';
+            input.style.borderColor = '#10B981';
+            clearError();
+            if (saveBtn) saveBtn.disabled = false;
+            return;
+          }
+
           const usernameDocRef = doc(db, 'usernames', val);
           const snap = await getDoc(usernameDocRef);
           if (snap.exists() && snap.data().uid !== activeUser?.uid) {
-            statusBadge.style.color = '#EF4444';
-            statusBadge.textContent = '❌ Already taken';
+            showError('এই ইউজারনেমটি ইতিমধ্যে ব্যবহৃত হচ্ছে');
           } else {
-            statusBadge.style.color = '#10B981';
-            statusBadge.textContent = '✅ Available';
+            if (iconStatus) iconStatus.innerHTML = '<i class="fas fa-check-circle" style="color: #10B981;"></i>';
+            input.style.borderColor = '#10B981';
+            clearError();
+            if (saveBtn) saveBtn.disabled = false;
           }
         } catch (err) {
           console.error('Error checking username availability:', err);
-          statusBadge.style.display = 'none';
+          if (iconStatus) iconStatus.innerHTML = '';
         }
-      }, 400);
+      }, 500);
     };
 
     // Copy Profile Image URL Helper
@@ -810,16 +854,20 @@
 
       const displayName = document.getElementById('edit-display-name').value.trim();
       const usernameInput = document.getElementById('edit-username');
-      let rawUsername = usernameInput.value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
-      const phone = document.getElementById('edit-phone').value.trim();
-      let photoURL = document.getElementById('edit-photo-url').value.trim();
+      let rawUsername = usernameInput.value.trim();
+      if (rawUsername.startsWith('@')) rawUsername = rawUsername.slice(1).trim();
+      rawUsername = rawUsername.toLowerCase();
 
-      if (!rawUsername || rawUsername.length < 3 || rawUsername.length > 20) {
+      const validCharsRegex = /^[a-z0-9_]+$/;
+      if (!rawUsername || !validCharsRegex.test(rawUsername) || rawUsername.length < 3 || rawUsername.length > 20) {
         alert('ইউজারনেম অবশ্যই ৩ থেকে ২০ ক্যারেক্টারের মধ্যে হতে হবে (শুধুমাত্র ইংরেজি অক্ষর, সংখ্যা ও আন্ডারস্কোর)।');
         saveBtn.disabled = false;
         saveBtn.innerHTML = 'Save Changes';
         return;
       }
+
+      const phone = document.getElementById('edit-phone').value.trim();
+      let photoURL = document.getElementById('edit-photo-url').value.trim();
 
       const oldUsername = (activeProfile?.username || '').toLowerCase();
 
