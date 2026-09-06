@@ -10,6 +10,13 @@
   <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
+  <!-- Loading Screen before Auth State Resolves -->
+  <div id="auth-loading-screen" class="auth-loading-screen">
+    <div class="auth-loading-spinner"></div>
+    <div class="auth-loading-text">Verifying admin permissions...</div>
+  </div>
+
+  <div id="admin-page-content" style="display: none;">
   <!-- Top Header Bar -->
   <div class="admin-top-bar">
     <div style="display: flex; align-items: center; gap: 12px;">
@@ -426,6 +433,7 @@
     </div>
 
   </div>
+  </div>
 
   <!-- MODALS -->
 
@@ -810,11 +818,18 @@
 
     // Auth State Listener
     onAuthStateUpdate((user, profile) => {
+      const loadingEl = document.getElementById('auth-loading-screen');
+      const contentEl = document.getElementById('admin-page-content');
+
       if (!isSuperAdminUser(user, profile)) {
         alert('Access Denied: Super Admin account (banglabazaroffical@gmail.com) required.');
-        window.location.href = 'index.html';
+        window.location.replace('index.html');
         return;
       }
+
+      if (loadingEl) loadingEl.classList.add('hidden');
+      if (contentEl) contentEl.style.display = 'block';
+
       loadAllAdminData();
     });
 
