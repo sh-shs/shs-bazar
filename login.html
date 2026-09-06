@@ -10,6 +10,13 @@
   <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
+  <!-- Loading Screen before Auth State Resolves -->
+  <div id="auth-loading-screen" class="auth-loading-screen">
+    <div class="auth-loading-spinner"></div>
+    <div class="auth-loading-text">Loading account status...</div>
+  </div>
+
+  <div id="login-page-content" style="display: none;">
   <div class="page-top-bar">
     <button class="back-btn" onclick="goBack()"><i class="fas fa-arrow-left"></i></button>
     <span class="page-title">Account Login</span>
@@ -68,15 +75,32 @@
       </div>
     </div>
   </div>
+  </div>
 
   <script type="module" src="assets/js/firebase-config.js"></script>
   <script type="module" src="assets/js/auth.js"></script>
   <script type="module" src="assets/js/app.js"></script>
   <script type="module">
-    import { loginWithEmail, registerWithEmail, loginWithGoogle, resetPassword } from './assets/js/auth.js';
+    import { loginWithEmail, registerWithEmail, loginWithGoogle, resetPassword, onAuthStateUpdate } from './assets/js/auth.js';
     import { showToast } from './assets/js/app.js';
 
     function initLoginPage() {
+      onAuthStateUpdate((user, profile) => {
+        const loadingEl = document.getElementById('auth-loading-screen');
+        const contentEl = document.getElementById('login-page-content');
+
+        if (user) {
+          // If already logged in, navigate straight to profile/admin without showing login form
+          const target = profile && profile.role === 'admin' ? 'admin.html' : 'profile.html';
+          window.location.replace(target);
+          return;
+        }
+
+        // Guest user - hide loading spinner and show login form
+        if (loadingEl) loadingEl.classList.add('hidden');
+        if (contentEl) contentEl.style.display = 'block';
+      });
+
       let isSignUp = false;
 
       const toggleBtn = document.getElementById('toggle-mode-btn');

@@ -181,6 +181,13 @@
   </style>
 </head>
 <body>
+  <!-- Loading Screen before Auth State Resolves -->
+  <div id="auth-loading-screen" class="auth-loading-screen">
+    <div class="auth-loading-spinner"></div>
+    <div class="auth-loading-text">Loading profile details...</div>
+  </div>
+
+  <div id="profile-page-content" style="display: none;">
   <!-- Top Bar -->
   <div class="page-top-bar">
     <button class="back-btn" onclick="goBack()"><i class="fas fa-arrow-left"></i></button>
@@ -303,6 +310,7 @@
       <span>Account</span>
     </a>
   </nav>
+  </div>
 
   <script type="module" src="assets/js/firebase-config.js"></script>
   <script type="module" src="assets/js/auth.js"></script>
@@ -398,14 +406,20 @@
     }
 
     onAuthStateUpdate(async (user, profile) => {
+      const loadingEl = document.getElementById('auth-loading-screen');
+      const contentEl = document.getElementById('profile-page-content');
+
       if (!user) {
-        window.location.href = 'login.html';
+        window.location.replace('login.html');
         return;
       }
 
       activeUser = user;
       activeProfile = profile;
       updateHeaderUI();
+
+      if (loadingEl) loadingEl.classList.add('hidden');
+      if (contentEl) contentEl.style.display = 'block';
 
       const container = document.getElementById('user-orders-list');
 

@@ -283,7 +283,7 @@
     import { BANGLADESH_LOCATIONS } from './assets/js/locations.js';
     import { loadDeliverySettings, calculateDeliveryCharge, placeOrder } from './assets/js/cart-checkout.js';
     import { getCart, showToast } from './assets/js/app.js';
-    import { currentUser, userProfile } from './assets/js/auth.js';
+    import { currentUser, userProfile, onAuthStateUpdate } from './assets/js/auth.js';
     import { fetchCoupons } from './assets/js/admin.js';
 
     let appliedDiscount = 0;
@@ -408,11 +408,22 @@
       }
 
 
-      // Pre-fill customer info if logged in
+      // Pre-fill customer info if logged in (handling dynamic auth resolution)
+      const fillUserInfo = (user, profile) => {
+        if (user && profile) {
+          const nameEl = document.getElementById('cust-name');
+          const emailEl = document.getElementById('cust-email');
+          if (nameEl && !nameEl.value) nameEl.value = profile.displayName || user.displayName || '';
+          if (emailEl && !emailEl.value) emailEl.value = user.email || profile.email || '';
+        }
+      };
+
       if (currentUser && userProfile) {
-        if (document.getElementById('cust-name')) document.getElementById('cust-name').value = userProfile.displayName || '';
-        if (document.getElementById('cust-email')) document.getElementById('cust-email').value = userProfile.email || '';
+        fillUserInfo(currentUser, userProfile);
       }
+      onAuthStateUpdate((user, profile) => {
+        fillUserInfo(user, profile);
+      });
 
       // Clear inline errors on input
       ['cust-name', 'cust-phone', 'cust-village'].forEach(id => {

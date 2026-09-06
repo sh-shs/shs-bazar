@@ -25,15 +25,35 @@ export const SUPER_ADMIN_EMAIL = SUPER_ADMIN_EMAILS[0];
 
 export let currentUser = null;
 export let userProfile = null;
+export let isAuthResolved = false;
 
 // Helper to notify subscribers on auth changes
 const authStateListeners = [];
+const authReadyListeners = [];
+
 export function onAuthStateUpdate(callback) {
   authStateListeners.push(callback);
+  if (isAuthResolved) {
+    callback(currentUser, userProfile);
+  }
+}
+
+export function onAuthReady(callback) {
+  if (isAuthResolved) {
+    callback(currentUser, userProfile);
+  } else {
+    authReadyListeners.push(callback);
+  }
 }
 
 function notifyAuthStateListeners() {
   authStateListeners.forEach(cb => cb(currentUser, userProfile));
+  if (isAuthResolved) {
+    while (authReadyListeners.length > 0) {
+      const cb = authReadyListeners.shift();
+      cb(currentUser, userProfile);
+    }
+  }
 }
 
 // Initialize Auth Listener
@@ -84,6 +104,7 @@ onAuthStateChanged(auth, async (user) => {
     userProfile = null;
   }
 
+  isAuthResolved = true;
   updateHeaderAuthUI();
   notifyAuthStateListeners();
 });
