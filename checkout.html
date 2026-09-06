@@ -39,7 +39,7 @@
 <body>
   <div class="page-top-bar">
     <button class="back-btn" onclick="goBack()"><i class="fas fa-arrow-left"></i></button>
-    <span class="page-title">Checkout</span>
+    <span class="page-title" data-i18n="checkoutTitle">Checkout</span>
   </div>
 
   <div class="checkout-page-container">
@@ -47,40 +47,40 @@
 
       <!-- 1. যোগাযোগের তথ্য সেকশন -->
       <div class="glass-card checkout-section-card">
-        <h3 class="step-card-title"><i class="fas fa-user"></i> ১. যোগাযোগের তথ্য</h3>
+        <h3 class="step-card-title"><i class="fas fa-user"></i> <span data-i18n="contactInfo">1. Contact Information</span></h3>
         <div class="form-group">
-          <label class="form-label">পূর্ণ নাম *</label>
-          <input type="text" id="cust-name" class="form-control" placeholder="আপনার পূর্ণ নাম লিখুন">
+          <label class="form-label" data-i18n="fullNameLabel">Full Name *</label>
+          <input type="text" id="cust-name" class="form-control" placeholder="Enter your full name" data-i18n-placeholder="fullNamePlaceholder">
           <span class="field-error" id="err-cust-name"></span>
         </div>
         <div class="form-group">
-          <label class="form-label">মোবাইল নম্বর *</label>
-          <input type="tel" id="cust-phone" class="form-control" placeholder="017XXXXXXXX">
+          <label class="form-label" data-i18n="phoneLabel">Mobile Number *</label>
+          <input type="tel" id="cust-phone" class="form-control" placeholder="017XXXXXXXX" data-i18n-placeholder="phonePlaceholder">
           <span class="field-error" id="err-cust-phone"></span>
         </div>
         <div class="form-group" style="margin-bottom: 0;">
-          <label class="form-label">ইমেইল ঠিকানা (ঐচ্ছিক)</label>
-          <input type="email" id="cust-email" class="form-control" placeholder="example@email.com">
+          <label class="form-label" data-i18n="emailLabel">Email Address (Optional)</label>
+          <input type="email" id="cust-email" class="form-control" placeholder="example@email.com" data-i18n-placeholder="emailPlaceholder">
         </div>
       </div>
 
       <!-- 2. ডেলিভারি ঠিকানা সেকশন -->
       <div class="glass-card checkout-section-card">
-        <h3 class="step-card-title"><i class="fas fa-map-marker-alt"></i> ২. ডেলিভারি ঠিকানা</h3>
+        <h3 class="step-card-title"><i class="fas fa-map-marker-alt"></i> <span data-i18n="deliveryAddress">2. Delivery Address</span></h3>
 
         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
           <div class="form-group">
-            <label class="form-label">বিভাগ *</label>
+            <label class="form-label" data-i18n="divisionLabel">Division *</label>
             <select id="select-division" class="form-control">
-              <option value="">বিভাগ নির্বাচন করুন</option>
+              <option value="" data-i18n="selectDivision">Select Division</option>
             </select>
             <span class="field-error" id="err-select-division"></span>
           </div>
 
           <div class="form-group">
-            <label class="form-label">জেলা *</label>
+            <label class="form-label" data-i18n="districtLabel">District *</label>
             <select id="select-district" class="form-control" disabled>
-              <option value="">জেলা নির্বাচন করুন</option>
+              <option value="" data-i18n="selectDistrict">Select District</option>
             </select>
             <span class="field-error" id="err-select-district"></span>
           </div>
@@ -88,65 +88,65 @@
 
         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
           <div class="form-group">
-            <label class="form-label">উপজেলা / থানা *</label>
+            <label class="form-label" data-i18n="thanaLabel">Upazila / Thana *</label>
             <select id="select-thana" class="form-control" disabled>
-              <option value="">থানা / উপজেলা নির্বাচন করুন</option>
+              <option value="" data-i18n="selectThana">Select Thana / Upazila</option>
             </select>
             <span class="field-error" id="err-select-thana"></span>
           </div>
 
           <div class="form-group">
-            <label class="form-label">ইউনিয়ন / ওয়ার্ড *</label>
+            <label class="form-label" data-i18n="unionLabel">Union / Ward *</label>
             <select id="select-union" class="form-control" disabled>
-              <option value="">ইউনিয়ন / ওয়ার্ড নির্বাচন করুন</option>
+              <option value="" data-i18n="selectUnion">Select Union / Ward</option>
             </select>
             <span class="field-error" id="err-select-union"></span>
           </div>
         </div>
 
         <div class="form-group">
-          <label class="form-label">ঠিকানা (গ্রাম / এলাকা / বাসা / রোড) *</label>
-          <input type="text" id="cust-village" class="form-control" placeholder="বাসার নম্বর, রোড, গ্রাম বা এলাকার নাম">
+          <label class="form-label" data-i18n="addressLabel">Address (Village / Area / House / Road) *</label>
+          <input type="text" id="cust-village" class="form-control" placeholder="House no., Road, Village or Area name" data-i18n-placeholder="addressPlaceholder">
           <span class="field-error" id="err-cust-village"></span>
         </div>
 
         <div class="form-group" style="margin-bottom: 0;">
-          <label class="form-label">অর্ডার নোট (ঐচ্ছিক)</label>
-          <textarea id="cust-notes" class="form-control" rows="2" placeholder="বিশেষ ডেলিভারি নির্দেশনা..."></textarea>
+          <label class="form-label" data-i18n="notesLabel">Order Notes (Optional)</label>
+          <textarea id="cust-notes" class="form-control" rows="2" placeholder="Special delivery instructions..." data-i18n-placeholder="notesPlaceholder"></textarea>
         </div>
       </div>
 
       <!-- 3. কুপন কোড সেকশন -->
       <div class="glass-card checkout-section-card">
-        <h3 class="step-card-title"><i class="fas fa-ticket-alt"></i> ৩. কুপন কোড (ঐচ্ছিক)</h3>
-        <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 10px;">
-          আপনার কাছে প্রোমো কোড বা কুপন থাকলে নিচে দিয়ে Apply বাটনে চাপ দিন।
+        <h3 class="step-card-title"><i class="fas fa-ticket-alt"></i> <span data-i18n="couponCodeSection">3. Coupon Code (Optional)</span></h3>
+        <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 10px;" data-i18n="couponDesc">
+          If you have a promo code or coupon, enter it below and tap Apply.
         </p>
         <div style="display: flex; gap: 8px;">
-          <input type="text" id="coupon-code" class="form-control" placeholder="কুপন কোড লিখুন" style="text-transform: uppercase;">
-          <button type="button" id="apply-coupon-btn" class="btn-outline" style="white-space: nowrap; padding: 8px 18px;">Apply</button>
+          <input type="text" id="coupon-code" class="form-control" placeholder="Enter coupon code" data-i18n-placeholder="couponPlaceholder" style="text-transform: uppercase;">
+          <button type="button" id="apply-coupon-btn" class="btn-outline" style="white-space: nowrap; padding: 8px 18px;" data-i18n="apply">Apply</button>
         </div>
         <div id="coupon-msg" style="font-size: 0.82rem; margin-top: 8px; font-weight: 600;"></div>
       </div>
 
       <!-- 4. পেমেন্ট পদ্ধতি সেকশন -->
       <div class="glass-card checkout-section-card">
-        <h3 class="step-card-title"><i class="fas fa-wallet"></i> ৪. পেমেন্ট পদ্ধতি</h3>
+        <h3 class="step-card-title"><i class="fas fa-wallet"></i> <span data-i18n="paymentMethodSection">4. Payment Method</span></h3>
 
         <div style="display: flex; flex-direction: column; gap: 10px;">
           <label class="payment-method-option">
             <input type="radio" name="payment_method" value="cod" checked>
             <div>
-              <strong>Cash on Delivery (ক্যাশ অন ডেলিভারি)</strong>
-              <div style="font-size: 0.75rem; color: var(--text-muted);">পণ্য হাতে পেয়ে মূল্য পরিশোধ করুন</div>
+              <strong data-i18n="codLabel">Cash on Delivery</strong>
+              <div style="font-size: 0.75rem; color: var(--text-muted);" data-i18n="codDesc">Pay cash upon delivery</div>
             </div>
           </label>
 
           <label class="payment-method-option">
             <input type="radio" name="payment_method" value="bkash">
             <div style="flex: 1;">
-              <strong style="color: #E2136E;"><i class="fas fa-mobile-alt"></i> bKash Payment (বিকাশ পেমেন্ট)</strong>
-              <div style="font-size: 0.75rem; color: var(--text-muted);">Send Money করে Transaction ID দিন</div>
+              <strong style="color: #E2136E;"><i class="fas fa-mobile-alt"></i> <span data-i18n="bkashLabel">bKash Payment</span></strong>
+              <div style="font-size: 0.75rem; color: var(--text-muted);" data-i18n="bkashDesc">Send Money & enter Transaction ID</div>
             </div>
             <button type="button" id="open-bkash-modal-btn" style="display: none; background: #E2136E; color: #FFF; font-size: 0.75rem; font-weight: 700; padding: 4px 10px; border-radius: 6px; border: none;">Pay with bKash</button>
           </label>
@@ -167,7 +167,7 @@
           <label class="payment-method-option disabled">
             <input type="radio" name="payment_method" value="nagad" disabled>
             <div>
-              <strong>Nagad Payment <span style="font-size: 0.7rem; background: var(--warning-color); color: #FFF; padding: 1px 4px; border-radius: 4px;">Coming Soon</span></strong>
+              <strong><span data-i18n="nagadLabel">Nagad Payment</span> <span style="font-size: 0.7rem; background: var(--warning-color); color: #FFF; padding: 1px 4px; border-radius: 4px;" data-i18n="comingSoon">Coming Soon</span></strong>
               <div style="font-size: 0.75rem; color: var(--text-muted);">Disabled in v1</div>
             </div>
           </label>
@@ -178,33 +178,33 @@
       <!-- 5. আপনার বিল কার্ড -->
       <div class="billing-summary-card checkout-section-card" style="margin-bottom: 16px;">
         <div class="billing-card-header">
-          <span class="billing-card-title">🧾 আপনার বিল</span>
+          <span class="billing-card-title" data-i18n="billingSummaryTitle">🧾 Billing Summary</span>
         </div>
         <div class="billing-card-body">
           <div class="billing-row">
-            <span class="billing-label">পণ্যের মূল্য</span>
+            <span class="billing-label" data-i18n="itemSubtotal">Product Subtotal</span>
             <span class="billing-value billing-subtotal">৳0</span>
           </div>
           <div class="billing-row">
             <span class="billing-label">
-              কুপন ছাড় <span class="coupon-status-tag tag-not-applied" id="coupon-status-tag">প্রযোজ্য নয়</span>
+              <span data-i18n="couponDiscount">Coupon Discount</span> <span class="coupon-status-tag tag-not-applied" id="coupon-status-tag" data-i18n="notApplicable">Not Applicable</span>
             </span>
             <span class="billing-value billing-discount">-৳0</span>
           </div>
           <div class="billing-row">
-            <span class="billing-label">ডেলিভারি চার্জ</span>
+            <span class="billing-label" data-i18n="deliveryCharge">Delivery Charge</span>
             <span class="billing-value billing-delivery">৳100</span>
           </div>
           <div class="billing-divider-dashed"></div>
           <div class="billing-row billing-grand-row">
-            <span class="billing-grand-label" style="font-size: 1.15rem; font-weight: 800;">সর্বমোট</span>
+            <span class="billing-grand-label" style="font-size: 1.15rem; font-weight: 800;" data-i18n="grandTotal">Grand Total</span>
             <span class="billing-grand-value billing-grandtotal" style="font-size: 1.4rem; font-weight: 900; color: #F5820A;">৳100</span>
           </div>
         </div>
       </div>
 
       <!-- 6. ফুল-উইথ "Place Order Now" বাটন -->
-      <button type="submit" id="place-order-btn" class="btn-accent" style="width: 100%; font-size: 1.1rem; font-weight: 800; padding: 14px; margin-bottom: 24px; border-radius: var(--radius-sm); text-align: center;">
+      <button type="submit" id="place-order-btn" class="btn-accent" style="width: 100%; font-size: 1.1rem; font-weight: 800; padding: 14px; margin-bottom: 24px; border-radius: var(--radius-sm); text-align: center;" data-i18n="placeOrderBtn">
         ✅ Place Order Now
       </button>
 

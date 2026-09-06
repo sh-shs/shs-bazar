@@ -20,8 +20,8 @@
       <a href="index.html" class="logo-container">
         <img src="assets/images/logo.png" alt="SHS Bazar Logo" class="logo-img">
         <div class="brand-text">
-          <span class="brand-name">SHS Bazar</span>
-          <span class="brand-tagline">OFFER OFFER OFFER</span>
+          <span class="brand-name" data-i18n="brandName">SHS Bazar</span>
+          <span class="brand-tagline" data-i18n="brandTagline">OFFER OFFER OFFER</span>
         </div>
       </a>
     </div>
@@ -111,8 +111,8 @@
   <!-- Search Bar Sticky Section -->
   <div class="search-container">
     <div class="search-box">
-      <input type="text" id="search-input" placeholder="Search products in Kushtia..." autocomplete="off">
-      <button><i class="fas fa-search"></i></button>
+      <input type="text" id="search-input" placeholder="Search products in Kushtia..." data-i18n-placeholder="searchPlaceholder" autocomplete="off">
+      <button aria-label="Search" data-i18n-aria="search"><i class="fas fa-search"></i></button>
     </div>
     <div class="search-results-dropdown" id="search-results"></div>
   </div>
@@ -127,10 +127,10 @@
   <section class="section-wrapper">
     <div class="section-header">
       <div class="section-title-wrap">
-        <h2 class="section-title">Featured Categories</h2>
+        <h2 class="section-title" data-i18n="featuredCategories">Featured Categories</h2>
         <div class="section-accent-line"></div>
       </div>
-      <a href="shop.html" class="see-all-btn">See All <i class="fas fa-chevron-right"></i></a>
+      <a href="shop.html" class="see-all-btn"><span data-i18n="seeAll">See All</span> <i class="fas fa-chevron-right"></i></a>
     </div>
     <div class="category-grid" id="category-grid"></div>
   </section>
@@ -139,10 +139,10 @@
   <section class="section-wrapper">
     <div class="section-header">
       <div class="section-title-wrap">
-        <h2 class="section-title">Trending Products</h2>
+        <h2 class="section-title" data-i18n="trendingProducts">Trending Products</h2>
         <div class="section-accent-line"></div>
       </div>
-      <a href="shop.html?filter=trending" class="see-all-btn">See All <i class="fas fa-chevron-right"></i></a>
+      <a href="shop.html?filter=trending" class="see-all-btn"><span data-i18n="seeAll">See All</span> <i class="fas fa-chevron-right"></i></a>
     </div>
     <div class="product-grid" id="trending-products"></div>
   </section>
@@ -151,15 +151,15 @@
   <section class="section-wrapper">
     <div class="section-header">
       <div class="section-title-wrap">
-        <h2 class="section-title">All Products</h2>
+        <h2 class="section-title" data-i18n="allProducts">All Products</h2>
         <div class="section-accent-line"></div>
       </div>
-      <a href="shop.html" class="see-all-btn">See All <i class="fas fa-chevron-right"></i></a>
+      <a href="shop.html" class="see-all-btn"><span data-i18n="seeAll">See All</span> <i class="fas fa-chevron-right"></i></a>
     </div>
     <div class="product-grid" id="all-products"></div>
     <div id="load-more-container" style="text-align: center; margin-top: 20px; display: none;">
       <button id="load-more-btn" class="btn-outline" style="padding: 10px 24px; font-weight: bold; font-size: 0.9rem; border-radius: var(--radius-sm);">
-        Load More <i class="fas fa-chevron-down"></i>
+        <span data-i18n="loadMore">Load More</span> <i class="fas fa-chevron-down"></i>
       </button>
     </div>
   </section>
@@ -167,20 +167,20 @@
   <!-- Offers Promotional Banner Section -->
   <section class="section-wrapper">
     <div style="background: linear-gradient(135deg, var(--primary-color), #05261E); color: #FFF; padding: 24px; border-radius: var(--radius-md); text-align: center; position: relative; overflow: hidden;">
-      <h3 style="color: var(--accent-color); font-size: 1.4rem; font-weight: 800; margin-bottom: 6px;">OFFER OFFER OFFER</h3>
-      <p style="font-size: 0.9rem; margin-bottom: 14px;">Special Wholesale Deals inside Kushtia! Delivery only ৳100 inside Kushtia town.</p>
-      <a href="shop.html" class="btn-accent" style="display: inline-block; text-transform: uppercase; font-weight: bold;">Shop Deals Now</a>
+      <h3 style="color: var(--accent-color); font-size: 1.4rem; font-weight: 800; margin-bottom: 6px;" data-i18n="promoBannerTitle">OFFER OFFER OFFER</h3>
+      <p style="font-size: 0.9rem; margin-bottom: 14px;" data-i18n="promoBannerDesc">Special Wholesale Deals inside Kushtia! Delivery only ৳100 inside Kushtia town.</p>
+      <a href="shop.html" class="btn-accent" style="display: inline-block; text-transform: uppercase; font-weight: bold;" data-i18n="shopDealsNow">Shop Deals Now</a>
     </div>
   </section>
 
   <!-- Newsletter Signup Section -->
   <section class="section-wrapper">
     <div class="glass-card" style="text-align: center; padding: 24px;">
-      <h3 style="color: var(--primary-color); font-size: 1.1rem; margin-bottom: 6px;">Subscribe to Newsletter</h3>
-      <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 14px;">Get instant SMS and Email notifications for local flash deals and discount coupons.</p>
+      <h3 style="color: var(--primary-color); font-size: 1.1rem; margin-bottom: 6px;" data-i18n="subscribeTitle">Subscribe to Newsletter</h3>
+      <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 14px;" data-i18n="subscribeDesc">Get instant SMS and Email notifications for local flash deals and discount coupons.</p>
       <div style="display: flex; gap: 8px; max-width: 400px; margin: 0 auto;">
-        <input type="email" placeholder="Enter your email" class="form-control" style="flex: 1;">
-        <button class="btn-primary">Subscribe</button>
+        <input type="email" placeholder="Enter your email" data-i18n-placeholder="subscribeEmailPlaceholder" class="form-control" style="flex: 1;">
+        <button class="btn-primary" data-i18n="subscribeBtn">Subscribe</button>
       </div>
     </div>
   </section>
@@ -204,40 +204,40 @@
       <div class="footer-col">
         <h3 style="display: flex; align-items: center; gap: 8px;">
           <img src="assets/images/logo.png" style="height: 30px; background: #FFF; padding: 2px; border-radius: 4px;" alt="Logo">
-          SHS Bazar
+          <span data-i18n="brandName">SHS Bazar</span>
         </h3>
-        <p style="font-size: 0.85rem; line-height: 1.4; color: #D1D5DB;">Your trusted multi-vendor local e-commerce platform in Kushtia, Bangladesh.</p>
-        <p style="font-size: 0.8rem; margin-top: 10px; color: var(--accent-color); font-weight: bold;">Tagline: OFFER OFFER OFFER</p>
+        <p style="font-size: 0.85rem; line-height: 1.4; color: #D1D5DB;" data-i18n="footerAboutText">Your trusted multi-vendor local e-commerce platform in Kushtia, Bangladesh.</p>
+        <p style="font-size: 0.8rem; margin-top: 10px; color: var(--accent-color); font-weight: bold;" data-i18n="taglineFooter">Tagline: OFFER OFFER OFFER</p>
       </div>
 
       <div class="footer-col">
-        <h3>Quick Links</h3>
+        <h3 data-i18n="quickLinks">Quick Links</h3>
         <div class="footer-links">
-          <a href="shop.html">Shop All Products</a>
-          <a href="offers.html">Special Offers</a>
-          <a href="contact.html">Contact Us</a>
-          <a href="about.html">About Us</a>
+          <a href="shop.html" data-i18n="shopAllProducts">Shop All Products</a>
+          <a href="offers.html" data-i18n="specialOffers">Special Offers</a>
+          <a href="contact.html" data-i18n="contactUs">Contact Us</a>
+          <a href="about.html" data-i18n="aboutUs">About Us</a>
         </div>
       </div>
 
       <div class="footer-col">
-        <h3>Customer Care & Policies</h3>
+        <h3 data-i18n="customerCarePolicies">Customer Care & Policies</h3>
         <div class="footer-links">
-          <a href="privacy-policy.html">Privacy Policy</a>
-          <a href="terms.html">Terms & Conditions</a>
-          <a href="return-policy.html">Return & Refund Policy</a>
-          <a href="shipping-policy.html">Shipping Policy</a>
+          <a href="privacy-policy.html" data-i18n="privacyPolicy">Privacy Policy</a>
+          <a href="terms.html" data-i18n="termsOfService">Terms & Conditions</a>
+          <a href="return-policy.html" data-i18n="returnPolicy">Return & Refund Policy</a>
+          <a href="shipping-policy.html" data-i18n="shippingInfo">Shipping Policy</a>
         </div>
       </div>
 
       <div class="footer-col">
-        <h3>Contact Us</h3>
+        <h3 data-i18n="contactUs">Contact Us</h3>
         <div class="footer-links" style="font-size: 0.85rem;">
-          <p><i class="fas fa-headset" style="color: var(--accent-color);"></i> Hotline: <a href="tel:+8809658183506" style="color: #FFF; text-decoration: underline;">+8809658183506</a></p>
-          <p><i class="fas fa-phone-alt" style="color: var(--accent-color);"></i> Phone: <a href="tel:+8801342697743" style="color: #FFF; text-decoration: underline;">01342697743</a></p>
+          <p><i class="fas fa-headset" style="color: var(--accent-color);"></i> <span data-i18n="hotline">Hotline</span>: <a href="tel:+8809658183506" style="color: #FFF; text-decoration: underline;">+8809658183506</a></p>
+          <p><i class="fas fa-phone-alt" style="color: var(--accent-color);"></i> <span data-i18n="phone">Phone</span>: <a href="tel:+8801342697743" style="color: #FFF; text-decoration: underline;">01342697743</a></p>
           <p><i class="fab fa-whatsapp" style="color: #25D366;"></i> WhatsApp: <a href="https://wa.me/8801342697743" target="_blank" rel="noopener noreferrer" style="color: #FFF; text-decoration: underline;">01342697743</a></p>
-          <p><i class="fas fa-envelope" style="color: var(--accent-color);"></i> Email: <a href="mailto:saripofficialsupport@gmail.com" style="color: #FFF; text-decoration: underline;">saripofficialsupport@gmail.com</a></p>
-          <p><i class="fas fa-map-marker-alt" style="color: var(--accent-color);"></i> Address: <a href="https://www.google.com/maps/search/?api=1&query=Kushtia,Bangladesh" target="_blank" rel="noopener noreferrer" style="color: #FFF; text-decoration: underline;">Kushtia, Bangladesh</a></p>
+          <p><i class="fas fa-envelope" style="color: var(--accent-color);"></i> <span data-i18n="email">Email</span>: <a href="mailto:saripofficialsupport@gmail.com" style="color: #FFF; text-decoration: underline;">saripofficialsupport@gmail.com</a></p>
+          <p><i class="fas fa-map-marker-alt" style="color: var(--accent-color);"></i> <span data-i18n="address">Address</span>: <a href="https://www.google.com/maps/search/?api=1&query=Kushtia,Bangladesh" target="_blank" rel="noopener noreferrer" style="color: #FFF; text-decoration: underline;">Kushtia, Bangladesh</a></p>
           <div style="display: flex; gap: 12px; margin-top: 10px; font-size: 1.2rem;">
             <a href="https://t.me/shsbazarofficial" target="_blank" rel="noopener noreferrer" style="color: #29B6F6;"><i class="fab fa-telegram"></i></a>
             <a href="https://facebook.com/shsbazarofficial" target="_blank" rel="noopener noreferrer" style="color: #1877F2;"><i class="fab fa-facebook"></i></a>
@@ -247,7 +247,7 @@
       </div>
     </div>
     <div class="footer-bottom">
-      &copy; <span id="copyright-year"></span> SHS Bazar. All rights reserved. Kushtia, Bangladesh.
+      &copy; <span id="copyright-year"></span> SHS Bazar. <span data-i18n="copyrightText">All rights reserved. Kushtia, Bangladesh.</span>
     </div>
   </footer>
 
@@ -255,25 +255,25 @@
   <nav class="bottom-nav">
     <a href="index.html" class="nav-item active">
       <div class="nav-icon-wrap"><i class="fas fa-home"></i></div>
-      <span>Home</span>
+      <span data-i18n="home">Home</span>
     </a>
     <a href="shop.html" class="nav-item">
       <div class="nav-icon-wrap"><i class="fas fa-th-large"></i></div>
-      <span>Menu</span>
+      <span data-i18n="navMenu">Menu</span>
     </a>
     <div class="center-cart-wrapper">
-      <a href="cart.html" class="center-cart-shortcut" aria-label="Cart">
+      <a href="cart.html" class="center-cart-shortcut" aria-label="Cart" data-i18n-aria="navCart">
         <i class="fas fa-shopping-cart"></i>
         <span class="nav-cart-badge cart-count-badge">0</span>
       </a>
     </div>
     <a href="shop.html" class="nav-item">
       <div class="nav-icon-wrap"><i class="fas fa-search"></i></div>
-      <span>Search</span>
+      <span data-i18n="navSearch">Search</span>
     </a>
     <a href="login.html" class="nav-item account-link">
       <div class="nav-icon-wrap"><i class="fas fa-user"></i></div>
-      <span>Account</span>
+      <span data-i18n="navAccount">Account</span>
     </a>
   </nav>
 

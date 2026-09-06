@@ -23,14 +23,14 @@
 <body>
   <div class="page-top-bar">
     <button class="back-btn" onclick="window.goBack()"><i class="fas fa-arrow-left"></i></button>
-    <span class="page-title" id="pd-header-title">Product Details</span>
+    <span class="page-title" id="pd-header-title" data-i18n="productDetails">Product Details</span>
     <div class="pd-header-menu-wrap">
       <button class="pd-header-menu-btn" id="pd-menu-btn" aria-label="More Options">
         <i class="fas fa-ellipsis-v"></i>
       </button>
       <div class="pd-header-dropdown" id="pd-header-dropdown">
         <button class="pd-dropdown-item" id="pd-dropdown-share-btn">
-          <i class="fas fa-share-nodes"></i> Share
+          <i class="fas fa-share-nodes"></i> <span data-i18n="share">Share</span>
         </button>
       </div>
     </div>
@@ -46,15 +46,15 @@
   <!-- Sticky Bottom Mobile Bar -->
   <div class="pd-sticky-bar" id="pd-sticky-bar" style="display: none;">
     <div class="pd-sticky-price">
-      <span class="pd-sticky-label">Total Price</span>
+      <span class="pd-sticky-label" data-i18n="totalPrice">Total Price</span>
       <span class="pd-sticky-val" id="pd-sticky-price-text">৳0</span>
     </div>
     <div class="pd-sticky-btns">
       <button id="pd-sticky-add-btn" class="btn-primary pd-btn-add">
-        <i class="fas fa-shopping-cart"></i> Cart
+        <i class="fas fa-shopping-cart"></i> <span data-i18n="addToCart">Cart</span>
       </button>
       <button id="pd-sticky-buynow-btn" class="btn-accent pd-btn-buy">
-        <i class="fas fa-bolt"></i> Buy Now
+        <i class="fas fa-bolt"></i> <span data-i18n="buyNow">Buy Now</span>
       </button>
     </div>
   </div>
@@ -64,7 +64,7 @@
   <script type="module" src="assets/js/app.js"></script>
   <script type="module">
     import { fetchProductBySlugOrId, fetchPublishedProducts, renderProductCard, getProductShareUrl } from './assets/js/products.js';
-    import { addToCart } from './assets/js/app.js';
+    import { addToCart, applyTranslations, getCurrentLang, TRANSLATIONS } from './assets/js/app.js';
     import { db, collection, getDocs, query, where } from './assets/js/firebase-config.js';
 
     const fallbackImage = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600' viewBox='0 0 600 600'%3E%3Crect width='600' height='600' fill='%23F8F9FA'/%3E%3Ctext x='50%25' y='46%25' dominant-baseline='middle' text-anchor='middle' fill='%230B4D3C' font-size='28' font-weight='bold' font-family='sans-serif'%3ESHS Bazar%3C/text%3E%3Ctext x='50%25' y='54%25' dominant-baseline='middle' text-anchor='middle' fill='%236B7280' font-size='18' font-family='sans-serif'%3EProduct Image%3C/text%3E%3C/svg%3E";
@@ -276,15 +276,15 @@
 
             <!-- Trust Badges Row -->
             <div class="pd-trust-row">
-              <div class="pd-trust-item"><i class="fas fa-check-circle"></i> <span>100% Authentic</span></div>
-              <div class="pd-trust-item"><i class="fas fa-truck-fast"></i> <span>Kushtia Express</span></div>
-              <div class="pd-trust-item"><i class="fas fa-shield-halved"></i> <span>Secure Pay</span></div>
+              <div class="pd-trust-item"><i class="fas fa-check-circle"></i> <span data-i18n="authenticBadge">100% Authentic</span></div>
+              <div class="pd-trust-item"><i class="fas fa-truck-fast"></i> <span data-i18n="expressBadge">Kushtia Express</span></div>
+              <div class="pd-trust-item"><i class="fas fa-shield-halved"></i> <span data-i18n="securePayBadge">Secure Pay</span></div>
             </div>
 
             <!-- Variants Selection -->
             ${product.variants && product.variants.length > 0 ? `
               <div class="form-group pd-variant-group">
-                <label class="form-label"><i class="fas fa-list-ul"></i> Select Variant / Option</label>
+                <label class="form-label"><i class="fas fa-list-ul"></i> <span data-i18n="selectVariant">Select Variant / Option</span></label>
                 <select id="pd-variant-select" class="form-control">
                   ${product.variants.map(v => `<option value="${v}">${v}</option>`).join('')}
                 </select>
@@ -294,10 +294,10 @@
             <!-- Primary Action Buttons -->
             <div class="pd-action-btns">
               <button id="pd-add-btn" class="btn-primary pd-btn-add" ${isOutOfStock ? 'disabled' : ''}>
-                <i class="fas fa-shopping-cart"></i> ${isOutOfStock ? 'Stock Out' : 'Add to Cart'}
+                <i class="fas fa-shopping-cart"></i> <span data-i18n="${isOutOfStock ? 'stockOut' : 'addToCart'}">${isOutOfStock ? 'Stock Out' : 'Add to Cart'}</span>
               </button>
               <button id="pd-buynow-btn" class="btn-accent pd-btn-buy" ${isOutOfStock ? 'disabled' : ''}>
-                <i class="fas fa-bolt"></i> Buy Now
+                <i class="fas fa-bolt"></i> <span data-i18n="${isOutOfStock ? 'stockOut' : 'buyNow'}">${isOutOfStock ? 'Stock Out' : 'Buy Now'}</span>
               </button>
             </div>
           </div>
@@ -307,7 +307,7 @@
         ${product.fullDescription ? `
           <div class="glass-card pd-details-card">
             <div class="section-title-wrap">
-              <h3 class="section-title">Description & Specifications</h3>
+              <h3 class="section-title" data-i18n="descAndSpecs">Description & Specifications</h3>
               <div class="section-accent-line"></div>
             </div>
             <div class="pd-full-desc">
@@ -319,7 +319,7 @@
         <!-- Customer Reviews Section -->
         <div class="glass-card pd-details-card" id="pd-reviews-section">
           <div class="section-title-wrap" style="display: flex; justify-content: space-between; align-items: center;">
-            <h3 class="section-title"><i class="fas fa-star" style="color: #F59E0B;"></i> Customer Reviews</h3>
+            <h3 class="section-title"><i class="fas fa-star" style="color: #F59E0B;"></i> <span data-i18n="customerReviews">Customer Reviews</span></h3>
             <span id="pd-reviews-badge-count" class="admin-badge admin-badge-active" style="background: rgba(10,74,57,0.1); color: var(--primary-color); font-weight: 700;">0 Reviews</span>
           </div>
           <div class="section-accent-line" style="margin-bottom: 16px;"></div>
@@ -336,10 +336,10 @@
         <div class="section-wrapper pd-related-wrapper">
           <div class="section-header">
             <div class="section-title-wrap">
-              <h3 class="section-title">Related Products</h3>
+              <h3 class="section-title" data-i18n="relatedProducts">Related Products</h3>
               <div class="section-accent-line"></div>
             </div>
-            <a href="${product.category ? 'shop.html?category=' + encodeURIComponent(product.category) : 'shop.html'}" class="see-all-btn">See All <i class="fas fa-chevron-right"></i></a>
+            <a href="${product.category ? 'shop.html?category=' + encodeURIComponent(product.category) : 'shop.html'}" class="see-all-btn"><span data-i18n="seeAll">See All</span> <i class="fas fa-chevron-right"></i></a>
           </div>
           <div class="product-grid" id="pd-related-grid">
             <div style="grid-column: 1/-1; text-align: center; padding: 20px; color: #888;">
@@ -569,12 +569,14 @@
         stickyBar.style.display = 'flex';
 
         if (isOutOfStock) {
-          if (stickyAddBtn) { stickyAddBtn.disabled = true; stickyAddBtn.innerHTML = 'Stock Out'; }
-          if (stickyBuyBtn) { stickyBuyBtn.disabled = true; stickyBuyBtn.innerHTML = 'Stock Out'; }
+          if (stickyAddBtn) { stickyAddBtn.disabled = true; stickyAddBtn.innerHTML = '<span data-i18n="stockOut">Stock Out</span>'; }
+          if (stickyBuyBtn) { stickyBuyBtn.disabled = true; stickyBuyBtn.innerHTML = '<span data-i18n="stockOut">Stock Out</span>'; }
         } else {
           stickyAddBtn?.addEventListener('click', handleAddAction);
           stickyBuyBtn?.addEventListener('click', handleBuyNowAction);
         }
+
+        applyTranslations();
       }
 
       // Load Related Products (Grid layout with at least 8 items)
