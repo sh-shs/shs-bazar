@@ -27,7 +27,8 @@ import {
     limit,
     deleteDoc,
     serverTimestamp,
-    onSnapshot
+    onSnapshot,
+    runTransaction
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import {
     getStorage,
@@ -84,6 +85,7 @@ export {
     deleteDoc,
     serverTimestamp,
     onSnapshot,
+    runTransaction,
     ref,
     uploadBytesResumable,
     getDownloadURL,
