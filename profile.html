@@ -194,7 +194,7 @@
   <!-- Top Bar -->
   <div class="page-top-bar">
     <button class="back-btn" onclick="goBack()"><i class="fas fa-arrow-left"></i></button>
-    <span class="page-title">My Account</span>
+    <span class="page-title" data-i18n="myAccount">My Account</span>
     <a href="settings.html" class="icon-btn" title="Settings" aria-label="Settings">
       <i class="fas fa-cog" style="font-size: 1.15rem; color: #FFFFFF;"></i>
     </a>
@@ -234,17 +234,17 @@
       <div class="stat-card stat-orders" onclick="scrollToOrderHistory()">
         <i class="fas fa-shopping-bag stat-icon"></i>
         <div id="stat-total-orders" class="stat-number">0</div>
-        <div class="stat-label">Total Orders</div>
+        <div class="stat-label" data-i18n="totalOrders">Total Orders</div>
       </div>
       <div class="stat-card stat-pending" onclick="scrollToOrderHistory()">
         <i class="fas fa-clock stat-icon"></i>
         <div id="stat-pending-orders" class="stat-number">0</div>
-        <div class="stat-label">Pending</div>
+        <div class="stat-label" data-i18n="pendingOrders">Pending</div>
       </div>
       <div class="stat-card stat-wishlist" onclick="window.location.href='wishlist.html'">
         <i class="fas fa-heart stat-icon"></i>
         <div id="stat-wishlist-items" class="stat-number">0</div>
-        <div class="stat-label">Wishlist</div>
+        <div class="stat-label" data-i18n="wishlistCount">Wishlist</div>
       </div>
     </div>
 
@@ -252,10 +252,10 @@
     <div id="order-history-section" class="glass-card" style="margin-bottom: 24px;">
       <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
         <h3 style="color: var(--primary-color); font-size: 1.05rem; margin: 0; font-weight: 800; display: flex; align-items: center; gap: 8px;">
-          <i class="fas fa-shopping-bag" style="color: var(--accent-color);"></i> Order History
+          <i class="fas fa-shopping-bag" style="color: var(--accent-color);"></i> <span data-i18n="orderHistory">Order History</span>
         </h3>
         <a href="orders.html" style="font-size: 0.8rem; font-weight: 700; color: var(--accent-color); text-decoration: none;">
-          View All <i class="fas fa-arrow-right" style="font-size: 0.75rem;"></i>
+          <span data-i18n="viewAll">View All</span> <i class="fas fa-arrow-right" style="font-size: 0.75rem;"></i>
         </a>
       </div>
       <div id="user-orders-list">
@@ -269,7 +269,7 @@
     <!-- 4. Bottom Logout Action -->
     <div style="text-align: center; margin-top: 20px;">
       <button onclick="openLogoutConfirmModal()" class="btn-outline" style="color: var(--danger-color); border-color: var(--danger-color); font-size: 0.9rem; padding: 10px 24px; border-radius: 25px; font-weight: 800; width: 100%; max-width: 320px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: rgba(239, 68, 68, 0.05);">
-        <i class="fas fa-sign-out-alt"></i> Logout Account
+        <i class="fas fa-sign-out-alt"></i> <span data-i18n="logoutAccount">Logout Account</span>
       </button>
     </div>
 
@@ -281,13 +281,13 @@
       <div style="font-size: 2.5rem; color: var(--danger-color); margin-bottom: 8px;">
         <i class="fas fa-sign-out-alt"></i>
       </div>
-      <h3 style="font-size: 1.15rem; color: var(--text-primary); margin-bottom: 6px; font-weight: 800;">Confirm Logout</h3>
-      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;">
+      <h3 style="font-size: 1.15rem; color: var(--text-primary); margin-bottom: 6px; font-weight: 800;" data-i18n="confirmLogoutTitle">Confirm Logout</h3>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;" data-i18n="confirmLogoutDesc">
         Are you sure you want to log out of your SHS Bazar account?
       </p>
       <div style="display: flex; gap: 10px; justify-content: center;">
-        <button type="button" onclick="closeLogoutConfirmModal()" class="btn-outline" style="flex: 1; font-size: 0.88rem; padding: 9px 16px;">Cancel</button>
-        <button type="button" onclick="confirmLogoutAction()" class="btn-primary" style="flex: 1; background: var(--danger-color); border-color: var(--danger-color); font-size: 0.88rem; padding: 9px 16px;">Yes, Logout</button>
+        <button type="button" onclick="closeLogoutConfirmModal()" class="btn-outline" style="flex: 1; font-size: 0.88rem; padding: 9px 16px;" data-i18n="cancel">Cancel</button>
+        <button type="button" onclick="confirmLogoutAction()" class="btn-primary" style="flex: 1; background: var(--danger-color); border-color: var(--danger-color); font-size: 0.88rem; padding: 9px 16px;" data-i18n="yesLogout">Yes, Logout</button>
       </div>
     </div>
   </div>

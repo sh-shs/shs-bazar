@@ -1,86 +1,67 @@
 // Main Application Script (UI Wiring, Search, Cart State, Mobile Nav)
 import { fetchPublishedProducts, fetchBanners, renderProductCard, fetchActiveCategories, DEFAULT_CATEGORIES, DEFAULT_BANNERS, getProductShareUrl } from './products.js';
 import { toggleWishlist, isProductInWishlist, currentUser, logoutUser, onAuthStateUpdate } from './auth.js';
+import { TRANSLATIONS as CENTRAL_TRANSLATIONS } from './translations.js';
 
-// Translations & Theme State
-export const TRANSLATIONS = {
-  en: {
-    home: "Home",
-    allCategories: "All Categories",
-    specialOffers: "Special Offers",
-    myOrders: "My Orders",
-    wishlist: "Wishlist",
-    myAccount: "My Account",
-    search: "Search",
-    logout: "Logout",
-    darkMode: "Dark Mode",
-    lightMode: "Light Mode",
-    language: "Language",
-    returnPolicy: "Return & Refund Policy",
-    shippingInfo: "Shipping & Delivery Info",
-    privacyPolicy: "Privacy Policy",
-    termsOfService: "Terms of Service",
-    faq: "FAQ / Help Center",
-    contactUs: "Contact Us",
-    aboutUs: "About Us",
-    shareApp: "Share Website / Rate Us",
-    navSectionMain: "MAIN",
-    navSectionAccount: "ACCOUNT & SETTINGS",
-    navSectionPolicies: "POLICIES & INFO",
-    navSectionSupport: "HELP & SOCIAL"
-  },
-  bn: {
-    home: "হোম",
-    allCategories: "সকল ক্যাটাগরি",
-    specialOffers: "স্পেশাল অফার",
-    myOrders: "আমার অর্ডারসমূহ",
-    wishlist: "উইশলিস্ট",
-    myAccount: "আমার অ্যাকাউন্ট",
-    search: "সার্চ",
-    logout: "লগআউট",
-    darkMode: "ডার্ক মোড",
-    lightMode: "লাইট মোড",
-    language: "ভাষা",
-    returnPolicy: "রিটার্ন ও রিফান্ড পলিসি",
-    shippingInfo: "শিপিং ও ডেলিভারি তথ্য",
-    privacyPolicy: "প্রাইভেসি পলিসি",
-    termsOfService: "টার্মস অফ সার্ভিস",
-    faq: "সাধারণ প্রশ্নাবলী (FAQ)",
-    contactUs: "যোগাযোগ করুন",
-    aboutUs: "আমাদের সম্পর্কে",
-    shareApp: "ওয়েবসাইট শেয়ার / রেটিং দিন",
-    navSectionMain: "প্রধান মেনু",
-    navSectionAccount: "অ্যাকাউন্ট ও সেটিংস",
-    navSectionPolicies: "পলিসি ও তথ্য",
-    navSectionSupport: "হেল্প ও সোশ্যাল"
-  }
-};
+export const TRANSLATIONS = CENTRAL_TRANSLATIONS;
 
 export function getCurrentLang() {
   return localStorage.getItem('shs_lang') || 'bn';
 }
 
+export function setLanguage(lang) {
+  const targetLang = (lang === 'en' || lang === 'bn') ? lang : 'bn';
+  localStorage.setItem('shs_lang', targetLang);
+  applyTranslations();
+  showToast(targetLang === 'bn' ? 'ভাষা: বাংলা সিলেক্ট করা হয়েছে' : 'Language: English selected');
+}
+
 export function toggleLanguage(lang) {
   const newLang = lang || (getCurrentLang() === 'bn' ? 'en' : 'bn');
-  localStorage.setItem('shs_lang', newLang);
-  applyTranslations();
-  showToast(newLang === 'bn' ? 'ভাষা: বাংলা' : 'Language: English');
+  setLanguage(newLang);
 }
 
 export function applyTranslations() {
   const lang = getCurrentLang();
-  const t = TRANSLATIONS[lang] || TRANSLATIONS.en;
+  const t = TRANSLATIONS[lang] || TRANSLATIONS.bn;
+
+  // 1. Text Content
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const key = el.getAttribute('data-i18n');
-    if (t[key]) {
+    if (t[key] !== undefined) {
       el.textContent = t[key];
     }
   });
+
+  // 2. Form Placeholders
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.getAttribute('data-i18n-placeholder');
+    if (t[key] !== undefined) {
+      el.setAttribute('placeholder', t[key]);
+    }
+  });
+
+  // 3. Titles and Aria Labels
+  document.querySelectorAll('[data-i18n-title]').forEach(el => {
+    const key = el.getAttribute('data-i18n-title');
+    if (t[key] !== undefined) {
+      el.setAttribute('title', t[key]);
+    }
+  });
+  document.querySelectorAll('[data-i18n-aria]').forEach(el => {
+    const key = el.getAttribute('data-i18n-aria');
+    if (t[key] !== undefined) {
+      el.setAttribute('aria-label', t[key]);
+    }
+  });
+
+  // Re-render Side Drawer to sync current language active item state
   if (typeof window.renderDrawer === 'function') {
     window.renderDrawer();
   }
 }
 
+window.setLanguage = setLanguage;
 window.toggleLanguage = toggleLanguage;
 
 // Theme Logic
@@ -270,11 +251,21 @@ export function renderDrawer() {
           <span class="theme-toggle-text">${isDark ? t.lightMode : t.darkMode}</span>
         </a>
       </li>
-      <li>
-        <a href="#" onclick="event.preventDefault(); toggleLanguage();" class="drawer-menu-item">
-          <i class="fas fa-globe" style="width: 20px; color: var(--primary-color);"></i>
-          <span>${t.language}: <strong style="color: var(--accent-color);">${lang === 'bn' ? 'বাংলা' : 'EN'}</strong></span>
-        </a>
+      <li style="padding: 8px 20px 4px 20px;">
+        <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+          <i class="fas fa-globe" style="color: var(--primary-color);"></i>
+          <span>${t.language} / Language</span>
+        </div>
+        <div class="drawer-lang-selector-block" style="display: flex; gap: 8px; background: var(--bg-color); padding: 4px; border-radius: 10px; border: 1px solid var(--border-color);">
+          <button type="button" onclick="event.preventDefault(); setLanguage('bn');" class="lang-option-btn ${lang === 'bn' ? 'active' : ''}" style="flex: 1; padding: 7px 10px; border-radius: 8px; border: none; font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: 6px; ${lang === 'bn' ? 'background: var(--primary-color); color: #FFF; box-shadow: 0 2px 6px rgba(10,74,57,0.25);' : 'background: transparent; color: var(--text-primary);'}">
+            <span>বাংলা</span>
+            ${lang === 'bn' ? '<i class="fas fa-check" style="font-size: 0.75rem;"></i>' : ''}
+          </button>
+          <button type="button" onclick="event.preventDefault(); setLanguage('en');" class="lang-option-btn ${lang === 'en' ? 'active' : ''}" style="flex: 1; padding: 7px 10px; border-radius: 8px; border: none; font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: 6px; ${lang === 'en' ? 'background: var(--primary-color); color: #FFF; box-shadow: 0 2px 6px rgba(10,74,57,0.25);' : 'background: transparent; color: var(--text-primary);'}">
+            <span>English</span>
+            ${lang === 'en' ? '<i class="fas fa-check" style="font-size: 0.75rem;"></i>' : ''}
+          </button>
+        </div>
       </li>
 
       <!-- 3. POLICIES & INFO -->

@@ -145,6 +145,10 @@ export function renderProductCard(product) {
   const imageSrc = product.images && product.images.length > 0 ? product.images[0] : 'https://via.placeholder.com/300?text=SHS+Bazar';
   const sellerId = product.sellerId || 'admin';
 
+  const lang = localStorage.getItem('shs_lang') || 'bn';
+  const addToCartText = lang === 'bn' ? 'কার্টে যোগ করুন' : 'Add to Cart';
+  const stockOutText = lang === 'bn' ? 'স্টক আউট' : 'Stock Out';
+
   return `
     <div class="product-card" data-product-id="${product.id}">
       <div class="product-thumb">
@@ -152,7 +156,7 @@ export function renderProductCard(product) {
           <img src="${imageSrc}" alt="${product.name}" loading="lazy">
         </a>
         ${isDiscounted ? `<span class="discount-badge">-${discountPercent}%</span>` : ''}
-        ${isOutOfStock ? `<div class="stock-out-overlay">Stock Out</div>` : ''}
+        ${isOutOfStock ? `<div class="stock-out-overlay" data-i18n="stockOut">${stockOutText}</div>` : ''}
         <button class="share-btn-card" title="Share Product" onclick="event.preventDefault(); event.stopPropagation(); window.handleCopyProductLink('${product.id}')">
           <i class="fas fa-share-nodes"></i>
         </button>
@@ -171,7 +175,7 @@ export function renderProductCard(product) {
         <button class="add-to-cart-btn ${isOutOfStock ? 'stock-out' : ''}"
           ${isOutOfStock ? 'disabled' : ''}
           onclick="window.handleAddToCart('${product.id}', '${product.name}', ${currentPrice}, '${imageSrc}', '${sellerId}')">
-          <i class="fas fa-shopping-cart"></i> ${isOutOfStock ? 'Stock Out' : 'Add to Cart'}
+          <i class="fas fa-shopping-cart"></i> <span data-i18n="${isOutOfStock ? 'stockOut' : 'addToCart'}">${isOutOfStock ? stockOutText : addToCartText}</span>
         </button>
       </div>
     </div>
