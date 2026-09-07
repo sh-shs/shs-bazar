@@ -59,6 +59,13 @@ export const TRANSLATIONS = {
     navCart: "Cart",
     navSearch: "Search",
     navAccount: "Account",
+    navNotification: "Notification",
+    notificationsTitle: "Notifications",
+    noNotifications: "No notifications yet",
+    noNotificationsDesc: "You're all caught up! Order status updates and special offers will appear here.",
+    orderStatusUpdate: "Order Status Update",
+    specialOfferNotification: "Special Offer & Discount",
+    markAllRead: "Mark all as read",
 
     // Product Card & Detail Page
     addToCart: "Add to Cart",
@@ -231,6 +238,13 @@ export const TRANSLATIONS = {
     navCart: "কার্ট",
     navSearch: "সার্চ",
     navAccount: "অ্যাকাউন্ট",
+    navNotification: "নোটিফিকেশন",
+    notificationsTitle: "নোটিফিকেশন",
+    noNotifications: "কোনো নোটিফিকেশন নেই",
+    noNotificationsDesc: "আপনার সমস্ত তথ্য আপডেট রয়েছে! অর্ডার স্ট্যাটাস ও বিশেষ অফারের নোটিফিকেশন এখানে দেখাবে।",
+    orderStatusUpdate: "অর্ডার স্ট্যাটাস আপডেট",
+    specialOfferNotification: "বিশেষ অফার ও ডিসকাউন্ট",
+    markAllRead: "সবগুলো পঠিত হিসেবে চিহ্নিত করুন",
 
     // Product Card & Detail Page
     addToCart: "কার্টে যোগ করুন",

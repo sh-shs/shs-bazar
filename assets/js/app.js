@@ -2,6 +2,7 @@
 import { fetchPublishedProducts, subscribeToPublishedProducts, fetchBanners, renderProductCard, renderSkeletonCards, renderErrorState, renderEmptyState, fetchActiveCategories, DEFAULT_CATEGORIES, DEFAULT_BANNERS, getProductShareUrl, FALLBACK_IMAGE } from './products.js';
 import { toggleWishlist, isProductInWishlist, currentUser, logoutUser, onAuthStateUpdate } from './auth.js';
 import { TRANSLATIONS } from './translations.js';
+import { db, collection, query, where, getDocs, limit } from './firebase-config.js';
 
 export { TRANSLATIONS };
 
@@ -211,6 +212,211 @@ export function closeImageModal() {
 
 window.openImageModal = openImageModal;
 window.closeImageModal = closeImageModal;
+
+// Notification System Logic
+function getStatusTextBn(status) {
+  const map = {
+    'Pending': 'পেন্ডিং (নজরদারিতে আছে)',
+    'Confirmed': 'কনফার্মড (নিশ্চিত করা হয়েছে)',
+    'Packed': 'প্যাকিং সম্পন্ন হয়েছে',
+    'Shipped': 'শিপিংয়ে পাঠানো হয়েছে',
+    'Out for Delivery': 'ডেলিভারির জন্য বের হয়েছে',
+    'Delivered': 'ডেলিভারি সম্পন্ন হয়েছে',
+    'Cancelled': 'বাতিল করা হয়েছে',
+    'Returned': 'ফেরত নেওয়া হয়েছে'
+  };
+  return map[status] || status;
+}
+
+export function getReadNotificationIds() {
+  try {
+    const raw = localStorage.getItem('shs_notifications_read');
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+export function markNotificationsRead(ids) {
+  try {
+    const current = getReadNotificationIds();
+    const updated = Array.from(new Set([...current, ...ids]));
+    localStorage.setItem('shs_notifications_read', JSON.stringify(updated));
+  } catch (e) {
+    console.warn('Error saving read notifications:', e);
+  }
+}
+
+export async function fetchUserNotifications() {
+  const lang = getCurrentLang();
+  const notifications = [];
+
+  // 1. Fetch Order notifications if user is logged in
+  if (currentUser) {
+    try {
+      const q = query(collection(db, 'orders'), where('userId', '==', currentUser.uid), limit(15));
+      const snap = await getDocs(q);
+      snap.forEach(docSnap => {
+        const orderData = docSnap.data();
+        const orderId = docSnap.id;
+        const shortId = orderId.slice(-6).toUpperCase();
+        const status = orderData.orderStatus || 'Pending';
+        notifications.push({
+          id: `order_${orderId}_${status}`,
+          type: 'order',
+          title: lang === 'bn' ? 'অর্ডার স্ট্যাটাস আপডেট' : 'Order Status Update',
+          message: lang === 'bn'
+            ? `আপনার অর্ডার #${shortId} ${getStatusTextBn(status)} অবস্থায় রয়েছে।`
+            : `Your order #${shortId} status is ${status}.`,
+          timestamp: orderData.createdAt?.toDate ? orderData.createdAt.toDate().getTime() : Date.now(),
+          icon: 'fas fa-box',
+          link: 'orders.html'
+        });
+      });
+    } catch (err) {
+      console.warn('Could not fetch user order notifications:', err);
+    }
+  }
+
+  // 2. Offer / Promotion Notification
+  notifications.push({
+    id: 'offer_kushtia_wholesale_deal',
+    type: 'offer',
+    title: lang === 'bn' ? 'বিশেষ অফার ও ডিসকাউন্ট' : 'Special Offer & Discount',
+    message: lang === 'bn'
+      ? 'কুষ্টিয়ায় বিশেষ পাইকারি অফার! ডেলিভারি চার্জ মাত্র ৳১০০ কুষ্টিয়া শহরের মধ্যে।'
+      : 'Special Wholesale Deals inside Kushtia! Delivery only ৳100 inside Kushtia town.',
+    timestamp: Date.now() - 3600000,
+    icon: 'fas fa-tags',
+    link: 'offers.html'
+  });
+
+  // Sort notifications by timestamp descending
+  notifications.sort((a, b) => b.timestamp - a.timestamp);
+  return notifications;
+}
+
+export async function initNotifications() {
+  const notifications = await fetchUserNotifications();
+  const readIds = getReadNotificationIds();
+  const unreadCount = notifications.filter(n => !readIds.includes(n.id)).length;
+
+  document.querySelectorAll('#nav-notification-badge, .notification-count-badge').forEach(badge => {
+    if (unreadCount > 0) {
+      badge.textContent = unreadCount;
+      badge.style.display = 'inline-flex';
+    } else {
+      badge.style.display = 'none';
+    }
+  });
+}
+
+export async function openNotificationModal() {
+  let modal = document.getElementById('notification-modal-overlay');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'notification-modal-overlay';
+    modal.className = 'notification-modal-overlay';
+    modal.onclick = (e) => {
+      if (e.target === modal) closeNotificationModal();
+    };
+    document.body.appendChild(modal);
+  }
+
+  const lang = getCurrentLang();
+  const t = TRANSLATIONS[lang] || TRANSLATIONS.bn;
+
+  modal.innerHTML = `
+    <div class="notification-modal-card">
+      <div class="notification-modal-header">
+        <div class="notification-modal-title">
+          <i class="fas fa-bell"></i>
+          <span>${t.navNotification || 'Notification'}</span>
+        </div>
+        <button type="button" class="notification-modal-close" onclick="closeNotificationModal()" aria-label="Close">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="notification-modal-body" id="notification-modal-body">
+        <div style="text-align: center; padding: 24px; color: var(--text-muted);">
+          <i class="fas fa-spinner fa-spin" style="font-size: 1.5rem; margin-bottom: 8px;"></i>
+          <p style="font-size: 0.85rem;">${lang === 'bn' ? 'নোটিফিকেশন লোড হচ্ছে...' : 'Loading notifications...'}</p>
+        </div>
+      </div>
+    </div>
+  `;
+
+  modal.classList.add('active');
+
+  const notifications = await fetchUserNotifications();
+  const bodyEl = document.getElementById('notification-modal-body');
+
+  if (bodyEl) {
+    if (notifications.length > 0) {
+      bodyEl.innerHTML = notifications.map(item => `
+        <div class="notification-item" onclick="window.location.href='${item.link || 'index.html'}'">
+          <div class="notification-item-icon ${item.type === 'order' ? 'type-order' : 'type-offer'}">
+            <i class="${item.icon}"></i>
+          </div>
+          <div class="notification-item-content">
+            <div class="notification-item-title">
+              <span>${item.title}</span>
+            </div>
+            <div class="notification-item-msg">${item.message}</div>
+            <div class="notification-item-time">${formatRelativeTime(item.timestamp, lang)}</div>
+          </div>
+        </div>
+      `).join('');
+
+      // Mark notifications as read when viewed
+      const allIds = notifications.map(n => n.id);
+      markNotificationsRead(allIds);
+
+      // Clear badge
+      document.querySelectorAll('#nav-notification-badge, .notification-count-badge').forEach(badge => {
+        badge.style.display = 'none';
+      });
+    } else {
+      bodyEl.innerHTML = `
+        <div class="notification-empty-state">
+          <div class="notification-empty-icon">
+            <i class="fas fa-bell-slash"></i>
+          </div>
+          <h4>${t.noNotifications || 'কোনো নোটিফিকেশন নেই'}</h4>
+          <p>${t.noNotificationsDesc || 'আপনার সমস্ত তথ্য আপডেট রয়েছে! অর্ডার স্ট্যাটাস ও বিশেষ অফারের নোটিফিকেশন এখানে দেখাবে।'}</p>
+        </div>
+      `;
+    }
+  }
+}
+
+export function closeNotificationModal() {
+  const modal = document.getElementById('notification-modal-overlay');
+  if (modal) modal.classList.remove('active');
+}
+
+function formatRelativeTime(timestamp, lang) {
+  const diff = Date.now() - timestamp;
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+
+  if (lang === 'bn') {
+    if (minutes < 5) return 'এইমাত্র';
+    if (minutes < 60) return `${minutes} মিনিট আগে`;
+    if (hours < 24) return `${hours} ঘণ্টা আগে`;
+    return `${days} দিন আগে`;
+  } else {
+    if (minutes < 5) return 'Just now';
+    if (minutes < 60) return `${minutes}m ago`;
+    if (hours < 24) return `${hours}h ago`;
+    return `${days}d ago`;
+  }
+}
+
+window.openNotificationModal = openNotificationModal;
+window.closeNotificationModal = closeNotificationModal;
+window.initNotifications = initNotifications;
 
 window.handleCopyWebsiteUrl = () => {
   const url = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '/index.html');
@@ -653,22 +859,10 @@ async function initApp() {
 
   onAuthStateUpdate(() => {
     renderDrawer();
+    initNotifications();
   });
 
-  // Bottom Navigation helper for Search button
-  document.querySelectorAll('.bottom-nav .nav-item').forEach(item => {
-    const icon = item.querySelector('i.fa-search');
-    if (icon) {
-      item.addEventListener('click', (e) => {
-        const input = document.getElementById('search-input');
-        if (input) {
-          e.preventDefault();
-          input.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          setTimeout(() => input.focus(), 300);
-        }
-      });
-    }
-  });
+  initNotifications();
 
   const copyrightYearEl = document.getElementById('copyright-year');
   if (copyrightYearEl) {
