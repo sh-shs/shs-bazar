@@ -1,5 +1,5 @@
 // Products Data Management & Firestore Helper Functions
-import { db, collection, getDocs, doc, getDoc, query, where, orderBy, limit } from './firebase-config.js';
+import { db, collection, getDocs, doc, getDoc, query, where, orderBy, limit, onSnapshot } from './firebase-config.js';
 import { isProductInWishlist } from './auth.js';
 
 export const FALLBACK_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 300 300'%3E%3Crect width='300' height='300' fill='%23F4F6F9'/%3E%3Cg transform='translate(100, 90)'%3E%3Crect x='0' y='0' width='100' height='80' rx='8' fill='none' stroke='%239CA3AF' stroke-width='6'/%3E%3Ccircle cx='30' cy='30' r='10' fill='%239CA3AF'/%3E%3Cpath d='M10 70 L35 40 L55 60 L70 45 L90 70 Z' fill='%239CA3AF'/%3E%3C/g%3E%3Ctext x='50%25' y='68%25' dominant-baseline='middle' text-anchor='middle' fill='%230B4D3C' font-size='18' font-weight='700' font-family='sans-serif'%3ESHS Bazar%3C/text%3E%3C/svg%3E";
@@ -76,22 +76,152 @@ export async function fetchActiveCategories() {
   return DEFAULT_CATEGORIES;
 }
 
-export async function fetchPublishedProducts(limitCount = null) {
-  try {
-    let q = query(collection(db, 'products'), where('status', '==', 'published'));
-    if (limitCount && Number(limitCount) > 0) {
-      q = query(collection(db, 'products'), where('status', '==', 'published'), limit(Number(limitCount)));
+let cachedPublishedProducts = null;
+
+export async function fetchPublishedProducts(limitCount = null, retries = 3, delayMs = 1000) {
+  let attempt = 0;
+  let lastError = null;
+
+  while (attempt < retries) {
+    try {
+      attempt++;
+      let q = query(collection(db, 'products'), where('status', '==', 'published'));
+      if (limitCount && Number(limitCount) > 0) {
+        q = query(collection(db, 'products'), where('status', '==', 'published'), limit(Number(limitCount)));
+      }
+
+      const fetchPromise = getDocs(q);
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error(`Firestore query timeout (Attempt ${attempt}/${retries})`)), 8000)
+      );
+
+      const snap = await Promise.race([fetchPromise, timeoutPromise]);
+      const products = [];
+      snap.forEach(docSnap => {
+        products.push({ id: docSnap.id, ...docSnap.data() });
+      });
+
+      // If Firestore served an empty result from offline cache because network failed
+      if (snap.metadata && snap.metadata.fromCache && products.length === 0) {
+        throw new Error(`Firestore query returned empty offline cache (Attempt ${attempt}/${retries})`);
+      }
+
+      if (products.length > 0 || !limitCount) {
+        cachedPublishedProducts = products;
+        try {
+          sessionStorage.setItem('shs_cached_products', JSON.stringify(products));
+        } catch (e) {}
+      }
+
+      return products;
+    } catch (err) {
+      lastError = err;
+      console.error(`[fetchPublishedProducts] Attempt ${attempt}/${retries} failed:`, err);
+      if (attempt < retries) {
+        await new Promise(res => setTimeout(res, delayMs * attempt));
+      }
     }
-    const snap = await getDocs(q);
-    const products = [];
-    snap.forEach(docSnap => {
-      products.push({ id: docSnap.id, ...docSnap.data() });
-    });
-    return products;
-  } catch (err) {
-    console.warn('Firestore products fetch error / offline mode, returning empty array:', err);
-    return [];
   }
+
+  // Soft fallback if cache exists
+  try {
+    const sessionData = sessionStorage.getItem('shs_cached_products');
+    if (sessionData) {
+      const parsed = JSON.parse(sessionData);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        console.warn('[fetchPublishedProducts] Fetch failed after retries, serving cached products from sessionStorage.');
+        return parsed;
+      }
+    }
+  } catch (e) {}
+
+  if (cachedPublishedProducts && cachedPublishedProducts.length > 0) {
+    console.warn('[fetchPublishedProducts] Fetch failed after retries, serving memory cached products.');
+    return cachedPublishedProducts;
+  }
+
+  throw lastError || new Error('Failed to fetch published products from Firestore after retries.');
+}
+
+/**
+ * Realtime subscription listener helper with proper error handling and unmount callback.
+ */
+export function subscribeToPublishedProducts(onData, onError) {
+  try {
+    const q = query(collection(db, 'products'), where('status', '==', 'published'));
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const products = [];
+        snapshot.forEach(docSnap => {
+          products.push({ id: docSnap.id, ...docSnap.data() });
+        });
+        cachedPublishedProducts = products;
+        try {
+          sessionStorage.setItem('shs_cached_products', JSON.stringify(products));
+        } catch (e) {}
+        if (typeof onData === 'function') onData(products);
+      },
+      (error) => {
+        console.error('[subscribeToPublishedProducts] Listener error:', error);
+        if (typeof onError === 'function') onError(error);
+      }
+    );
+    return unsubscribe;
+  } catch (err) {
+    console.error('[subscribeToPublishedProducts] Listener setup error:', err);
+    if (typeof onError === 'function') onError(err);
+    return () => {};
+  }
+}
+
+export function renderSkeletonCards(count = 4) {
+  let items = '';
+  for (let i = 0; i < count; i++) {
+    items += `
+      <div class="product-card skeleton-card">
+        <div class="skeleton-thumb"></div>
+        <div class="product-details" style="padding: 12px;">
+          <div class="skeleton-line" style="width: 80%; height: 16px; margin-bottom: 8px;"></div>
+          <div class="skeleton-line" style="width: 40%; height: 20px; margin-bottom: 12px;"></div>
+          <div class="skeleton-line" style="width: 100%; height: 36px; border-radius: var(--radius-sm);"></div>
+        </div>
+      </div>
+    `;
+  }
+  return items;
+}
+
+export function renderErrorState(message, retryCallbackName) {
+  const lang = localStorage.getItem('shs_lang') || 'bn';
+  const retryText = lang === 'bn' ? 'পুনরায় চেষ্টা করুন' : 'Try Again';
+  const defaultMsg = lang === 'bn'
+    ? 'প্রোডাক্ট লোড করতে সমস্যা হয়েছে। অনুগ্রহ করে আপনার নেটওয়ার্ক চেক করে আবার চেষ্টা করুন।'
+    : 'Failed to load products. Please check your network connection and try again.';
+
+  return `
+    <div class="product-error-state" style="grid-column: 1/-1; text-align: center; padding: 32px 16px; background: var(--bg-card); border-radius: var(--radius-md); border: 1px dashed var(--border-color); margin: 12px 0;">
+      <i class="fas fa-exclamation-triangle" style="font-size: 2.2rem; color: #E11D48; margin-bottom: 12px;"></i>
+      <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--text-primary); margin-bottom: 6px;">${message || defaultMsg}</h3>
+      ${retryCallbackName ? `
+        <button onclick="${retryCallbackName}" class="btn-primary" style="margin-top: 10px; padding: 8px 20px; font-size: 0.85rem; border-radius: 8px;">
+          <i class="fas fa-sync-alt"></i> ${retryText}
+        </button>
+      ` : ''}
+    </div>
+  `;
+}
+
+export function renderEmptyState(message) {
+  const lang = localStorage.getItem('shs_lang') || 'bn';
+  const defaultMsg = lang === 'bn' ? 'কোনো প্রোডাক্ট পাওয়া যায়নি' : 'No products found';
+
+  return `
+    <div class="product-empty-state" style="grid-column: 1/-1; text-align: center; padding: 36px 16px; background: var(--bg-card); border-radius: var(--radius-md); border: 1px solid var(--border-color); margin: 12px 0;">
+      <i class="fas fa-box-open" style="font-size: 2.5rem; color: var(--text-muted); margin-bottom: 12px;"></i>
+      <p style="font-size: 0.95rem; font-weight: 600; color: var(--text-muted);">${message || defaultMsg}</p>
+    </div>
+  `;
 }
 
 export async function fetchProductBySlugOrId(identifier) {

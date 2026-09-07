@@ -1136,6 +1136,60 @@ input, select, textarea {
   border-color: rgba(245, 130, 10, 0.25);
 }
 
+/* Skeleton Loader & States */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-card {
+  pointer-events: none;
+  user-select: none;
+}
+
+.skeleton-thumb {
+  width: 100%;
+  aspect-ratio: 1/1;
+  background: linear-gradient(90deg, #E2E8F0 25%, #F1F5F9 50%, #E2E8F0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite linear;
+}
+
+body.dark-mode .skeleton-thumb,
+[data-theme="dark"] .skeleton-thumb {
+  background: linear-gradient(90deg, #1E293B 25%, #334155 50%, #1E293B 75%);
+  background-size: 200% 100%;
+}
+
+.skeleton-line {
+  background: linear-gradient(90deg, #E2E8F0 25%, #F1F5F9 50%, #E2E8F0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite linear;
+  border-radius: 4px;
+}
+
+body.dark-mode .skeleton-line,
+[data-theme="dark"] .skeleton-line {
+  background: linear-gradient(90deg, #1E293B 25%, #334155 50%, #1E293B 75%);
+  background-size: 200% 100%;
+}
+
+.product-error-state, .product-empty-state {
+  transition: all 0.3s ease;
+}
+
+.product-error-state button {
+  box-shadow: 0 4px 12px rgba(10, 74, 57, 0.2);
+}
+
+.product-error-state button:hover {
+  transform: translateY(-2px);
+}
+
 .product-thumb {
   position: relative;
   width: 100%;

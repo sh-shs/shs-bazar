@@ -1,9 +1,9 @@
 // Main Application Script (UI Wiring, Search, Cart State, Mobile Nav)
-import { fetchPublishedProducts, fetchBanners, renderProductCard, fetchActiveCategories, DEFAULT_CATEGORIES, DEFAULT_BANNERS, getProductShareUrl, FALLBACK_IMAGE } from './products.js';
+import { fetchPublishedProducts, subscribeToPublishedProducts, fetchBanners, renderProductCard, renderSkeletonCards, renderErrorState, renderEmptyState, fetchActiveCategories, DEFAULT_CATEGORIES, DEFAULT_BANNERS, getProductShareUrl, FALLBACK_IMAGE } from './products.js';
 import { toggleWishlist, isProductInWishlist, currentUser, logoutUser, onAuthStateUpdate } from './auth.js';
-import { TRANSLATIONS as CENTRAL_TRANSLATIONS } from './translations.js';
+import { TRANSLATIONS } from './translations.js';
 
-export const TRANSLATIONS = CENTRAL_TRANSLATIONS;
+export { TRANSLATIONS };
 
 export function getCurrentLang() {
   return localStorage.getItem('shs_lang') || 'bn';
@@ -712,55 +712,109 @@ async function initApp() {
       }
     }).catch(err => console.warn('Banner fetch error:', err));
 
-    const products = await fetchPublishedProducts();
-    initSearch(products);
+    // Show skeletons immediately during initial loading
+    const allProductsGrid = document.getElementById('all-products');
+    trendingGrid.innerHTML = renderSkeletonCards(4);
+    if (allProductsGrid) {
+      allProductsGrid.innerHTML = renderSkeletonCards(8);
+    }
 
-    const renderGrid = (elementId, filterFn) => {
-      const el = document.getElementById(elementId);
-      if (el) {
-        const filtered = filterFn ? products.filter(filterFn) : products;
-        if (filtered.length > 0) {
-          el.innerHTML = filtered.map(renderProductCard).join('');
+    let isSnapshotActive = false;
+    let unsubscribeProducts = null;
+
+    const renderHomepageProductsUI = (products) => {
+      initSearch(products);
+      const lang = getCurrentLang();
+      const t = TRANSLATIONS[lang] || TRANSLATIONS.bn;
+
+      // Trending Grid
+      const trendingProducts = products.filter(p => p.isTrending);
+      if (trendingProducts.length > 0) {
+        trendingGrid.innerHTML = trendingProducts.map(renderProductCard).join('');
+      } else {
+        trendingGrid.innerHTML = renderEmptyState(t.noTrendingProducts || 'বর্তমানে কোনো ট্রেন্ডিং প্রোডাক্ট নেই');
+      }
+
+      // All Products grid with pagination / Load More
+      if (allProductsGrid) {
+        if (products.length > 0) {
+          const PAGE_SIZE = 8;
+          let visibleCount = PAGE_SIZE;
+
+          const renderAllProductsGrid = () => {
+            const visibleProducts = products.slice(0, visibleCount);
+            allProductsGrid.innerHTML = visibleProducts.map(renderProductCard).join('');
+
+            const loadMoreContainer = document.getElementById('load-more-container');
+            const loadMoreBtn = document.getElementById('load-more-btn');
+
+            if (loadMoreContainer && loadMoreBtn) {
+              if (visibleCount < products.length) {
+                loadMoreContainer.style.display = 'block';
+                loadMoreBtn.onclick = () => {
+                  visibleCount += PAGE_SIZE;
+                  renderAllProductsGrid();
+                };
+              } else {
+                loadMoreContainer.style.display = 'none';
+              }
+            }
+          };
+
+          renderAllProductsGrid();
         } else {
-          el.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #888; padding: 20px;">আরও প্রোডাক্ট শীঘ্রই আসছে</p>';
+          allProductsGrid.innerHTML = renderEmptyState(t.noProductsFound || 'কোনো প্রোডাক্ট পাওয়া যায়নি');
+          const loadMoreContainer = document.getElementById('load-more-container');
+          if (loadMoreContainer) loadMoreContainer.style.display = 'none';
         }
       }
     };
 
-    renderGrid('trending-products', p => p.isTrending);
-
-    // All Products grid with pagination / Load More
-    const allProductsGrid = document.getElementById('all-products');
-    if (allProductsGrid) {
-      if (products.length > 0) {
-        const PAGE_SIZE = 8;
-        let visibleCount = PAGE_SIZE;
-
-        const renderAllProductsGrid = () => {
-          const visibleProducts = products.slice(0, visibleCount);
-          allProductsGrid.innerHTML = visibleProducts.map(renderProductCard).join('');
-
-          const loadMoreContainer = document.getElementById('load-more-container');
-          const loadMoreBtn = document.getElementById('load-more-btn');
-
-          if (loadMoreContainer && loadMoreBtn) {
-            if (visibleCount < products.length) {
-              loadMoreContainer.style.display = 'block';
-              loadMoreBtn.onclick = () => {
-                visibleCount += PAGE_SIZE;
-                renderAllProductsGrid();
-              };
-            } else {
-              loadMoreContainer.style.display = 'none';
-            }
-          }
-        };
-
-        renderAllProductsGrid();
-      } else {
-        allProductsGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #888; padding: 20px;">আরও প্রোডাক্ট শীঘ্রই আসছে</p>';
+    const loadHomepageProducts = async () => {
+      trendingGrid.innerHTML = renderSkeletonCards(4);
+      if (allProductsGrid) {
+        allProductsGrid.innerHTML = renderSkeletonCards(8);
       }
-    }
+
+      try {
+        const products = await fetchPublishedProducts(null, 3, 1000);
+        renderHomepageProductsUI(products);
+
+        // Attach snapshot listener after initial fetch succeeds for real-time reactivity
+        if (!isSnapshotActive) {
+          unsubscribeProducts = subscribeToPublishedProducts(
+            (updatedProducts) => {
+              isSnapshotActive = true;
+              renderHomepageProductsUI(updatedProducts);
+            },
+            (error) => {
+              console.warn('[Realtime Listener Error]:', error);
+            }
+          );
+        }
+      } catch (err) {
+        console.error('[loadHomepageProducts Error]:', err);
+        const lang = getCurrentLang();
+        const t = TRANSLATIONS[lang] || TRANSLATIONS.bn;
+        const errorHtml = renderErrorState(t.errorLoadingProducts, 'window.retryFetchHomepageProducts()');
+        trendingGrid.innerHTML = errorHtml;
+        if (allProductsGrid) {
+          allProductsGrid.innerHTML = errorHtml;
+        }
+      }
+    };
+
+    window.retryFetchHomepageProducts = () => {
+      loadHomepageProducts();
+    };
+
+    window.addEventListener('beforeunload', () => {
+      if (typeof unsubscribeProducts === 'function') {
+        unsubscribeProducts();
+      }
+    });
+
+    loadHomepageProducts();
   }
 }
 

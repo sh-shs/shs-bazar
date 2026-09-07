@@ -63,87 +63,109 @@
   <script type="module" src="assets/js/products.js"></script>
   <script type="module" src="assets/js/app.js"></script>
   <script type="module">
-    import { fetchPublishedProducts, renderProductCard, fetchActiveCategories } from './assets/js/products.js';
-    import { initSearch } from './assets/js/app.js';
+    import { fetchPublishedProducts, renderProductCard, renderSkeletonCards, renderErrorState, renderEmptyState, fetchActiveCategories } from './assets/js/products.js';
+    import { initSearch, getCurrentLang, TRANSLATIONS } from './assets/js/app.js';
+    import { TRANSLATIONS as TRANSLATIONS_FILE } from './assets/js/translations.js';
 
     async function initShopPage() {
-      const products = await fetchPublishedProducts();
-      initSearch(products);
-
-      const activeCategories = await fetchActiveCategories();
-
-      const urlParams = new URLSearchParams(window.location.search);
-      const selectedCategory = urlParams.get('category');
-      const filterParam = urlParams.get('filter');
-      const searchQuery = urlParams.get('search')?.trim();
-
-      if (searchQuery) {
-        const searchInput = document.getElementById('search-input');
-        if (searchInput) searchInput.value = searchQuery;
-      }
-
-      // Filter tabs
-      const filterBar = document.getElementById('category-filter-bar');
-      if (filterBar) {
-        filterBar.innerHTML = `<button class="btn-outline ${!selectedCategory ? 'btn-primary' : ''}" onclick="window.location.href='shop.html'" style="padding: 4px 12px; font-size: 0.8rem; white-space: nowrap;">All</button>` +
-          activeCategories.map(c => `
-            <button class="btn-outline ${selectedCategory === c.id ? 'btn-primary' : ''}"
-              onclick="window.location.href='shop.html?category=${c.id}'"
-              style="padding: 4px 12px; font-size: 0.8rem; white-space: nowrap;">
-              ${c.name}
-            </button>
-          `).join('');
-      }
-
-      let displayed = products;
-      if (selectedCategory) {
-        displayed = displayed.filter(p => p.category === selectedCategory || (p.category && p.category.toLowerCase() === selectedCategory.toLowerCase()));
-      }
-      if (filterParam === 'trending') displayed = displayed.filter(p => p.isTrending);
-      if (filterParam === 'flash') displayed = displayed.filter(p => p.isFlashSale);
-      if (filterParam === 'bestseller') displayed = displayed.filter(p => p.isBestSeller);
-      if (searchQuery) {
-        const q = searchQuery.toLowerCase();
-        displayed = displayed.filter(p =>
-          (p.name && p.name.toLowerCase().includes(q)) ||
-          (p.category && p.category.toLowerCase().includes(q)) ||
-          (p.tags && p.tags.some(t => t.toLowerCase().includes(q)))
-        );
-      }
-
       const grid = document.getElementById('shop-products-grid');
       const loadMoreContainer = document.getElementById('shop-load-more-container');
       const loadMoreBtn = document.getElementById('shop-load-more-btn');
 
       if (grid) {
-        if (displayed.length > 0) {
-          const PAGE_SIZE = 12;
-          let visibleCount = PAGE_SIZE;
+        grid.innerHTML = renderSkeletonCards(8);
+      }
 
-          const renderShopGrid = () => {
-            const visible = displayed.slice(0, visibleCount);
-            grid.innerHTML = visible.map(renderProductCard).join('');
+      try {
+        const products = await fetchPublishedProducts(null, 3, 1000);
+        initSearch(products);
 
-            if (loadMoreContainer && loadMoreBtn) {
-              if (visibleCount < displayed.length) {
-                loadMoreContainer.style.display = 'block';
-                loadMoreBtn.onclick = () => {
-                  visibleCount += PAGE_SIZE;
-                  renderShopGrid();
-                };
-              } else {
-                loadMoreContainer.style.display = 'none';
+        const activeCategories = await fetchActiveCategories();
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const selectedCategory = urlParams.get('category');
+        const filterParam = urlParams.get('filter');
+        const searchQuery = urlParams.get('search')?.trim();
+
+        if (searchQuery) {
+          const searchInput = document.getElementById('search-input');
+          if (searchInput) searchInput.value = searchQuery;
+        }
+
+        // Filter tabs
+        const filterBar = document.getElementById('category-filter-bar');
+        if (filterBar) {
+          filterBar.innerHTML = `<button class="btn-outline ${!selectedCategory ? 'btn-primary' : ''}" onclick="window.location.href='shop.html'" style="padding: 4px 12px; font-size: 0.8rem; white-space: nowrap;">All</button>` +
+            activeCategories.map(c => `
+              <button class="btn-outline ${selectedCategory === c.id ? 'btn-primary' : ''}"
+                onclick="window.location.href='shop.html?category=${c.id}'"
+                style="padding: 4px 12px; font-size: 0.8rem; white-space: nowrap;">
+                ${c.name}
+              </button>
+            `).join('');
+        }
+
+        let displayed = products;
+        if (selectedCategory) {
+          displayed = displayed.filter(p => p.category === selectedCategory || (p.category && p.category.toLowerCase() === selectedCategory.toLowerCase()));
+        }
+        if (filterParam === 'trending') displayed = displayed.filter(p => p.isTrending);
+        if (filterParam === 'flash') displayed = displayed.filter(p => p.isFlashSale);
+        if (filterParam === 'bestseller') displayed = displayed.filter(p => p.isBestSeller);
+        if (searchQuery) {
+          const q = searchQuery.toLowerCase();
+          displayed = displayed.filter(p =>
+            (p.name && p.name.toLowerCase().includes(q)) ||
+            (p.category && p.category.toLowerCase().includes(q)) ||
+            (p.tags && p.tags.some(t => t.toLowerCase().includes(q)))
+          );
+        }
+
+        if (grid) {
+          if (displayed.length > 0) {
+            const PAGE_SIZE = 12;
+            let visibleCount = PAGE_SIZE;
+
+            const renderShopGrid = () => {
+              const visible = displayed.slice(0, visibleCount);
+              grid.innerHTML = visible.map(renderProductCard).join('');
+
+              if (loadMoreContainer && loadMoreBtn) {
+                if (visibleCount < displayed.length) {
+                  loadMoreContainer.style.display = 'block';
+                  loadMoreBtn.onclick = () => {
+                    visibleCount += PAGE_SIZE;
+                    renderShopGrid();
+                  };
+                } else {
+                  loadMoreContainer.style.display = 'none';
+                }
               }
-            }
-          };
+            };
 
-          renderShopGrid();
-        } else {
-          grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #888; padding: 40px;">আরও প্রোডাক্ট শীঘ্রই আসছে</p>';
-          if (loadMoreContainer) loadMoreContainer.style.display = 'none';
+            renderShopGrid();
+          } else {
+            const lang = getCurrentLang ? getCurrentLang() : 'bn';
+            const dict = TRANSLATIONS || TRANSLATIONS_FILE;
+            const t = dict ? (dict[lang] || dict.bn) : {};
+            grid.innerHTML = renderEmptyState(t.noProductsFound || 'কোনো প্রোডাক্ট পাওয়া যায়নি');
+            if (loadMoreContainer) loadMoreContainer.style.display = 'none';
+          }
+        }
+      } catch (err) {
+        console.error('[initShopPage Error]:', err);
+        if (grid) {
+          const lang = getCurrentLang ? getCurrentLang() : 'bn';
+          const dict = TRANSLATIONS || TRANSLATIONS_FILE;
+          const t = dict ? (dict[lang] || dict.bn) : {};
+          grid.innerHTML = renderErrorState(t.errorLoadingProducts, 'window.retryInitShopPage()');
         }
       }
     }
+
+    window.retryInitShopPage = () => {
+      initShopPage();
+    };
 
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', initShopPage);
