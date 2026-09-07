@@ -399,21 +399,6 @@ export async function saveAdminProduct(productData, productId = null) {
       payload.createdAt = new Date();
       payload.status = 'published';
       const docRef = await addDoc(collection(db, 'products'), payload);
-
-      // Create a public announcement in 'announcements' collection for new product additions
-      try {
-        await addDoc(collection(db, 'announcements'), {
-          type: 'announcement',
-          title: 'নতুন প্রোডাক্ট যুক্ত হয়েছে!',
-          message: `${payload.name || 'নতুন প্রোডাক্ট'} - এখন পাওয়া যাচ্ছে SHS Bazar এ!`,
-          link: `product-detail.html?id=${docRef.id}`,
-          productId: docRef.id,
-          createdAt: new Date()
-        });
-      } catch (annErr) {
-        console.warn('Error creating public announcement for new product:', annErr);
-      }
-
       return docRef.id;
     }
   } catch (err) {
@@ -469,55 +454,6 @@ export async function updateOrderStatus(orderId, orderStatus) {
     orderStatus,
     updatedAt: new Date()
   });
-
-  // Create notifications if status updated with safety check
-  try {
-    const orderSnap = await getDoc(orderRef);
-    if (orderSnap.exists()) {
-      const orderData = orderSnap.data();
-      const targetUserId = orderData.userId;
-
-      if (!targetUserId || targetUserId === 'guest') {
-        console.warn('Skipping notification creation: targetUserId is empty, undefined, or guest.', { orderId });
-        return;
-      }
-
-      const userNotifsRef = collection(db, 'users', targetUserId, 'notifications');
-      const shortId = orderId.slice(-6).toUpperCase();
-
-      // 1. Order Status Update Notification
-      await addDoc(userNotifsRef, {
-        type: 'order',
-        orderId: orderId,
-        title: 'Order Status Update',
-        message: `Your order #${shortId} status is now ${orderStatus}.`,
-        link: 'orders.html',
-        createdAt: new Date(),
-        isRead: false
-      });
-
-      // 2. Product Review Prompt Notification(s) if order is Delivered
-      if (orderStatus === 'Delivered' && Array.isArray(orderData.items)) {
-        for (const item of orderData.items) {
-          const prodId = item.id || item.productId;
-          const prodName = item.name || 'product';
-          await addDoc(userNotifsRef, {
-            type: 'review_prompt',
-            orderId: orderId,
-            relatedOrderId: orderId,
-            relatedProductId: prodId,
-            title: 'Please Rate Your Product',
-            message: `${prodName} প্রোডাক্টটি কেমন লেগেছে জানান`,
-            link: prodId ? `product-detail.html?id=${encodeURIComponent(prodId)}&openReview=true&orderId=${encodeURIComponent(orderId)}` : 'orders.html',
-            createdAt: new Date(),
-            isRead: false
-          });
-        }
-      }
-    }
-  } catch (err) {
-    console.error('Error creating notifications on updateOrderStatus:', err);
-  }
 }
 
 export async function updatePaymentStatus(orderId, paymentStatus) {
