@@ -1,5 +1,5 @@
 // Main Application Script (UI Wiring, Search, Cart State, Mobile Nav)
-import { fetchPublishedProducts, fetchBanners, renderProductCard, fetchActiveCategories, DEFAULT_CATEGORIES, DEFAULT_BANNERS, getProductShareUrl } from './products.js';
+import { fetchPublishedProducts, fetchBanners, renderProductCard, fetchActiveCategories, DEFAULT_CATEGORIES, DEFAULT_BANNERS, getProductShareUrl, FALLBACK_IMAGE } from './products.js';
 import { toggleWishlist, isProductInWishlist, currentUser, logoutUser, onAuthStateUpdate } from './auth.js';
 import { TRANSLATIONS as CENTRAL_TRANSLATIONS } from './translations.js';
 
@@ -177,6 +177,40 @@ export function closeShareModal() {
 
 window.openShareModal = openShareModal;
 window.closeShareModal = closeShareModal;
+
+// Image Lightbox Modal
+export function openImageModal(imageUrl) {
+  if (!imageUrl) return;
+  let modal = document.getElementById('image-lightbox-overlay');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'image-lightbox-overlay';
+    modal.className = 'share-modal-overlay';
+    modal.onclick = (e) => {
+      if (e.target === modal || e.target.closest('.bkash-close-btn')) {
+        closeImageModal();
+      }
+    };
+    document.body.appendChild(modal);
+  }
+
+  modal.innerHTML = `
+    <div class="share-modal-card" style="max-width: 90vw; max-height: 90vh; padding: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(15, 23, 42, 0.95); border: 1px solid var(--border-color);">
+      <button class="bkash-close-btn" onclick="closeImageModal()" style="top: 10px; right: 10px; background: rgba(255,255,255,0.2); color: #FFF; z-index: 10;"><i class="fas fa-times"></i></button>
+      <img src="${imageUrl}" style="max-width: 100%; max-height: 82vh; object-fit: contain; border-radius: 8px;">
+    </div>
+  `;
+
+  modal.classList.add('active');
+}
+
+export function closeImageModal() {
+  const modal = document.getElementById('image-lightbox-overlay');
+  if (modal) modal.classList.remove('active');
+}
+
+window.openImageModal = openImageModal;
+window.closeImageModal = closeImageModal;
 
 window.handleCopyWebsiteUrl = () => {
   const url = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '/index.html');
@@ -514,7 +548,7 @@ export function initSearch(allProducts) {
     if (matches.length > 0) {
       resultsDropdown.innerHTML = matches.slice(0, 6).map(p => `
         <div class="search-result-item" onclick="window.location.href='product-detail.html?id=${encodeURIComponent(p.id || p.slug)}'">
-          <img src="${p.images?.[0] || 'https://via.placeholder.com/40'}" alt="${p.name}">
+          <img src="${p.images?.[0] || FALLBACK_IMAGE}" alt="${p.name}" loading="lazy">
           <div>
             <div style="font-size: 0.85rem; font-weight: 600;">${p.name}</div>
             <div style="font-size: 0.75rem; color: var(--accent-color); font-weight: bold;">৳${p.discountPrice || p.regularPrice}</div>
@@ -550,7 +584,7 @@ export function initCarousel(banners) {
     const hasOverlay = (b.title && b.title.trim()) || (b.subtitle && b.subtitle.trim());
     return `
       <div class="carousel-slide" onclick="window.location.href='${linkUrl}'" style="cursor: pointer;">
-        <img src="${imgSrc}" alt="${b.title || 'Banner'}" onerror="this.src='${b.fallbackImage || 'https://via.placeholder.com/1200x400?text=SHS+Bazar'}'">
+        <img src="${imgSrc}" alt="${b.title || 'Banner'}" loading="lazy" onerror="this.src='${b.fallbackImage || FALLBACK_IMAGE}'">
         ${hasOverlay ? `
         <div class="banner-overlay">
           <h2>${b.title || ''}</h2>
@@ -659,7 +693,7 @@ async function initApp() {
           catGrid.innerHTML = cats.map(cat => `
             <div class="category-card" onclick="window.location.href='shop.html?category=${cat.id}'">
               <div class="category-icon-box">
-                ${cat.image ? `<img src="${cat.image}" style="width:28px; height:28px; object-fit:cover; border-radius:4px;">` : `<i class="fas ${cat.icon || 'fa-folder'}"></i>`}
+                ${cat.image ? `<img src="${cat.image}" loading="lazy" style="width:28px; height:28px; object-fit:cover; border-radius:4px;">` : `<i class="fas ${cat.icon || 'fa-folder'}"></i>`}
               </div>
               <span class="category-name">${cat.name}</span>
             </div>

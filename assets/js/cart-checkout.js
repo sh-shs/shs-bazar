@@ -2,14 +2,28 @@
 import { getCart, saveCart, showToast } from './app.js';
 import { db, collection, addDoc, getDocs, serverTimestamp, doc, getDoc } from './firebase-config.js';
 import { currentUser } from './auth.js';
+import { FALLBACK_IMAGE } from './products.js';
 
 // Default delivery rates if not dynamically overridden in Firestore settings
 let deliverySettings = {
   insideKushtia: 100,
   outsideKushtia: 160
 };
+let deliverySettingsCached = null;
 
 export async function loadDeliverySettings() {
+  if (deliverySettingsCached) {
+    return deliverySettings;
+  }
+  try {
+    const sessionData = sessionStorage.getItem('shs_cached_delivery_settings');
+    if (sessionData) {
+      deliverySettingsCached = JSON.parse(sessionData);
+      deliverySettings = { ...deliverySettings, ...deliverySettingsCached };
+      return deliverySettings;
+    }
+  } catch (e) {}
+
   try {
     const timeoutPromise = new Promise((_, reject) =>
       setTimeout(() => reject(new Error('Delivery settings load timeout')), 1200)
@@ -19,7 +33,11 @@ export async function loadDeliverySettings() {
       timeoutPromise
     ]);
     if (docSnap.exists()) {
-      deliverySettings = { ...deliverySettings, ...docSnap.data() };
+      deliverySettingsCached = docSnap.data();
+      deliverySettings = { ...deliverySettings, ...deliverySettingsCached };
+      try {
+        sessionStorage.setItem('shs_cached_delivery_settings', JSON.stringify(deliverySettingsCached));
+      } catch (e) {}
     }
   } catch (err) {
     console.warn('Using default delivery settings:', err);
@@ -58,7 +76,7 @@ export function renderCartItemsPage() {
 
   container.innerHTML = cart.map((item, index) => `
     <div class="cart-item-card" style="display: flex; gap: 12px; padding: 12px; background: #FFF; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 10px; align-items: center;">
-      <img src="${item.image}" alt="${item.name}" style="width: 70px; height: 70px; object-fit: cover; border-radius: 6px;">
+      <img src="${item.image}" alt="${item.name}" loading="lazy" style="width: 70px; height: 70px; object-fit: cover; border-radius: 6px;">
       <div style="flex: 1;">
         <h4 style="font-size: 0.9rem; font-weight: 600; line-height: 1.2;">${item.name}</h4>
         ${item.variant ? `<span style="font-size: 0.75rem; color: #777;">Variant: ${item.variant}</span>` : ''}
@@ -99,15 +117,22 @@ window.removeCartItem = (index) => {
   renderCartItemsPage();
 };
 
+let isOrderSubmitting = false;
+
 // Place Order into Firestore with Server-Side Recalculation
 export async function placeOrder(orderData) {
+  if (isOrderSubmitting) {
+    throw new Error('Order placement is already in progress. Please wait.');
+  }
+
+  isOrderSubmitting = true;
   try {
     const items = (orderData.items || []).map(item => ({
       id: item.id || item.productId || 'N/A',
       name: item.name || 'Unnamed Product',
       price: Number(item.price || 0),
       quantity: Number(item.quantity || 1),
-      image: item.image || item.images?.[0] || 'https://via.placeholder.com/150',
+      image: item.image || item.images?.[0] || FALLBACK_IMAGE,
       variant: item.variant || item.selectedVariant || null,
       sellerId: item.sellerId || 'admin'
     }));
@@ -209,5 +234,7 @@ export async function placeOrder(orderData) {
   } catch (err) {
     console.error('Order placement failed:', err);
     throw err;
+  } finally {
+    isOrderSubmitting = false;
   }
 }

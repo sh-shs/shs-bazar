@@ -766,6 +766,7 @@
     import { showToast } from './assets/js/app.js';
     import { db, collection, getDocs, doc, deleteDoc } from './assets/js/firebase-config.js';
     import { generatePDFInvoice } from './assets/js/invoice.js';
+    import { FALLBACK_IMAGE } from './assets/js/products.js';
 
     // Global Admin State Store
     const adminState = {
@@ -1073,7 +1074,7 @@
                   <tr>
                     <td>
                       <div style="display:flex; align-items:center; gap:10px;">
-                        <img src="${p.images?.[0] || 'https://via.placeholder.com/40'}" style="width:40px; height:40px; object-fit:cover; border-radius:6px; border:1px solid #E5E7EB;">
+                        <img src="${p.images?.[0] || FALLBACK_IMAGE}" style="width:40px; height:40px; object-fit:cover; border-radius:6px; border:1px solid #E5E7EB;">
                         <strong>${p.name}</strong>
                       </div>
                     </td>
@@ -2036,7 +2037,7 @@
         const items = Array.isArray(o.items) ? o.items : [];
         const itemsListHTML = items.map(item => `
           <div style="display: flex; gap: 10px; align-items: center; background: #F8F9FA; padding: 8px; border-radius: 6px; margin-bottom: 6px; border: 1px solid #E5E7EB;">
-            <img src="${item.image || (item.images && item.images[0]) || 'https://via.placeholder.com/50'}" style="width: 44px; height: 44px; object-fit: cover; border-radius: 4px; border: 1px solid #DDD;">
+            <img src="${item.image || (item.images && item.images[0]) || FALLBACK_IMAGE}" style="width: 44px; height: 44px; object-fit: cover; border-radius: 4px; border: 1px solid #DDD;">
             <div style="flex: 1;">
               <div style="font-weight: 600; font-size: 0.85rem; color: #111;">${item.name || 'Unnamed Product'}</div>
               <div style="font-size: 0.75rem; color: #666;">
