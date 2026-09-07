@@ -222,33 +222,6 @@ export async function updateProductStock(productId, newStock) {
   });
 }
 
-// -------------------------------------------------------------
-// 8. Reviews Management Functions
-// -------------------------------------------------------------
-export async function fetchReviewsFromDB() {
-  try {
-    const snap = await getDocs(collection(db, 'reviews'));
-    const list = [];
-    snap.forEach(d => list.push({ id: d.id, ...d.data() }));
-    return list;
-  } catch (err) {
-    console.error('Error fetching reviews from DB:', err);
-    return [];
-  }
-}
-
-export async function updateReviewStatus(reviewId, status) {
-  await updateDoc(doc(db, 'reviews', reviewId), {
-    status,
-    isApproved: status === 'approved',
-    updatedAt: new Date()
-  });
-}
-
-export async function deleteReviewFromDB(reviewId) {
-  await deleteDoc(doc(db, 'reviews', reviewId));
-}
-
 export async function fetchCategoriesFromDB() {
   try {
     const snap = await getDocs(collection(db, 'categories'));

@@ -89,12 +89,5 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isSuperAdmin();
     }
-
-    // Reviews collection
-    match /reviews/{reviewId} {
-      allow read: if true;
-      allow create: if isSignedIn();
-      allow update, delete: if isSuperAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
-    }
   }
 }
