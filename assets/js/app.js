@@ -103,7 +103,7 @@ export function openShareModal() {
   }
 
   const siteUrl = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '/index.html');
-  const shareText = encodeURIComponent("Check out SHS Bazar for amazing local deals in Kushtia! OFFER OFFER OFFER");
+  const shareText = encodeURIComponent("Check out SHS Bazar for amazing local deals in Kushtia!");
   const encodedUrl = encodeURIComponent(siteUrl);
 
   modal.innerHTML = `

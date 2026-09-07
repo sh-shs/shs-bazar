@@ -122,7 +122,7 @@ export function generatePDFInvoice(order) {
         <div class="invoice-header">
           <div class="brand-logo-area">
             <h1>SHS Bazar</h1>
-            <span class="tagline">OFFER OFFER OFFER</span>
+            <span class="tagline">Online Shopping in Kushtia</span>
             <p>
               Kushtia, Khulna, Bangladesh<br />
               <strong>Hotline:</strong> +8809658183506 | <strong>Mobile:</strong> 01342697743<br />
