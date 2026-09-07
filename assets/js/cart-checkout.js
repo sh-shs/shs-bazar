@@ -121,6 +121,10 @@ let isOrderSubmitting = false;
 
 // Place Order into Firestore with Server-Side Recalculation
 export async function placeOrder(orderData) {
+  if (!currentUser || !currentUser.uid) {
+    throw new Error('অর্ডার করার জন্য লগইন করা বাধ্যতামূলক। অনুগ্রহ করে প্রথমে লগইন করুন।');
+  }
+
   if (isOrderSubmitting) {
     throw new Error('Order placement is already in progress. Please wait.');
   }
@@ -221,15 +225,17 @@ export async function placeOrder(orderData) {
       bKashTxnId: orderData.bKashTxnId || null,
       sellerIds,
       createdAt: serverTimestamp(),
-      userId: currentUser ? currentUser.uid : 'guest',
+      userId: currentUser.uid,
       orderStatus: 'Pending',
       paymentStatus: orderData.paymentMethod === 'cod' ? 'Pending' : 'Submitted'
     };
 
     const docRef = await addDoc(collection(db, 'orders'), sanitizedOrder);
 
-    // Create "Order Placed" notification in users/{userId}/notifications for logged-in user
-    if (sanitizedOrder.userId && sanitizedOrder.userId !== 'guest') {
+    // Create "Order Placed" notification in users/{userId}/notifications with safety check
+    if (!sanitizedOrder.userId || sanitizedOrder.userId === 'guest') {
+      console.warn('Skipping notification creation: userId is empty, undefined, or guest.', { orderId: docRef.id });
+    } else {
       try {
         const userNotifsRef = collection(db, 'users', sanitizedOrder.userId, 'notifications');
         const shortId = docRef.id.slice(-6).toUpperCase();

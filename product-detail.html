@@ -134,7 +134,7 @@
   <script type="module">
     import { fetchProductBySlugOrId, fetchPublishedProducts, renderProductCard, getProductShareUrl } from './assets/js/products.js';
     import { addToCart, applyTranslations, getCurrentLang, TRANSLATIONS, showToast } from './assets/js/app.js';
-    import { db, collection, getDocs, addDoc, query, where } from './assets/js/firebase-config.js';
+    import { db, collection, getDocs, addDoc, query, where, doc, getDoc } from './assets/js/firebase-config.js';
     import { currentUser, userProfile } from './assets/js/auth.js';
     import { uploadMediaFile } from './assets/js/admin.js';
 
@@ -709,7 +709,8 @@
 
           if (container) {
             container.innerHTML = reviews.map(r => {
-              const reviewerName = maskCustomerName(r.userName || r.customer_name || r.customerName || 'Customer');
+              const rawName = r.reviewerName || r.userName || r.customer_name || r.customerName || 'Customer';
+              const reviewerName = maskCustomerName(rawName);
               const rating = Number(r.rating || 5);
               const stars = '★'.repeat(rating) + '☆'.repeat(5 - rating);
 
@@ -806,11 +807,28 @@
               videoUrl = await uploadMediaFile(pdPendingVideo, 'reviews');
             }
 
-            const userName = userProfile?.displayName || currentUser.displayName || currentUser.email?.split('@')[0] || 'Customer';
+            let fullReviewerName = userProfile?.displayName || userProfile?.fullName || currentUser.displayName || '';
+
+            if (!fullReviewerName) {
+              try {
+                const uDoc = await getDoc(doc(db, 'users', currentUser.uid));
+                if (uDoc.exists()) {
+                  const uData = uDoc.data();
+                  fullReviewerName = uData.fullName || uData.displayName || uData.name || '';
+                }
+              } catch (uErr) {
+                console.warn('Error fetching user profile document:', uErr);
+              }
+            }
+
+            if (!fullReviewerName) {
+              fullReviewerName = currentUser.email ? currentUser.email.split('@')[0] : 'Customer';
+            }
 
             const reviewData = {
               userId: currentUser.uid,
-              userName: userName,
+              reviewerName: fullReviewerName,
+              userName: fullReviewerName,
               rating: rating,
               description: desc,
               imageUrls: imageUrls,
@@ -823,7 +841,7 @@
             const subColRef = collection(db, 'products', product.id, 'reviews');
             await addDoc(subColRef, reviewData);
 
-            showToast('রিভিউ সফলভাবে জমা দেওয়া হয়েছে!');
+            showToast('আপনার রিভিউ সফলভাবে জমা হয়েছে');
             window.closePdReviewModal();
             loadProductReviews(product.id);
           } catch (err) {
