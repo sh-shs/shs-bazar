@@ -235,7 +235,7 @@
                 ${mediaItems.map((item, idx) => `
                   <button class="pd-thumb-btn ${idx === 0 ? 'active' : ''}" data-index="${idx}">
                     ${item.type === 'video' ? `<i class="fas fa-play-circle pd-thumb-play-icon"></i>` : ''}
-                    <img src="${item.type === 'video' ? item.thumb : item.url}" alt="Thumbnail ${idx + 1}" onerror="this.onerror=null;this.src='${fallbackImage}';">
+                    <img src="${item.type === 'video' ? item.thumb : item.url}" alt="Thumbnail ${idx + 1}" loading="lazy" onerror="this.onerror=null;this.src='${fallbackImage}';">
                   </button>
                 `).join('')}
               </div>
@@ -376,7 +376,7 @@
           `;
         } else {
           heroViewport.innerHTML = `
-            <img src="${media.url}" alt="${product.name} Image ${index + 1}" class="pd-hero-img" onerror="this.onerror=null;this.src='${fallbackImage}';">
+            <img src="${media.url}" alt="${product.name} Image ${index + 1}" class="pd-hero-img" loading="lazy" onerror="this.onerror=null;this.src='${fallbackImage}';">
           `;
         }
       }
@@ -501,7 +501,7 @@
               const imagesHTML = (Array.isArray(r.images) && r.images.length > 0) ? `
                 <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;">
                   ${r.images.map(imgUrl => `
-                    <img src="${imgUrl}" style="width: 64px; height: 64px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-color); cursor: pointer;" onclick="window.openImageModal('${imgUrl}')">
+                    <img src="${imgUrl}" loading="lazy" style="width: 64px; height: 64px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-color); cursor: pointer;" onclick="window.openImageModal('${imgUrl}')">
                   `).join('')}
                 </div>
               ` : '';

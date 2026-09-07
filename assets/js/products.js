@@ -2,6 +2,20 @@
 import { db, collection, getDocs, doc, getDoc, query, where, orderBy, limit } from './firebase-config.js';
 import { isProductInWishlist } from './auth.js';
 
+export const FALLBACK_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 300 300'%3E%3Crect width='300' height='300' fill='%23F4F6F9'/%3E%3Cg transform='translate(100, 90)'%3E%3Crect x='0' y='0' width='100' height='80' rx='8' fill='none' stroke='%239CA3AF' stroke-width='6'/%3E%3Ccircle cx='30' cy='30' r='10' fill='%239CA3AF'/%3E%3Cpath d='M10 70 L35 40 L55 60 L70 45 L90 70 Z' fill='%239CA3AF'/%3E%3C/g%3E%3Ctext x='50%25' y='68%25' dominant-baseline='middle' text-anchor='middle' fill='%230B4D3C' font-size='18' font-weight='700' font-family='sans-serif'%3ESHS Bazar%3C/text%3E%3C/svg%3E";
+
+export function getOptimizedImageUrl(url, width = 300, quality = 'auto') {
+  if (!url || typeof url !== 'string') return FALLBACK_IMAGE;
+  if (url.includes('cloudinary.com') && url.includes('/upload/')) {
+    if (url.includes('/f_auto,q_auto') || url.includes('/w_')) {
+      return url;
+    }
+    const params = `f_auto,q_${quality},w_${width}`;
+    return url.replace('/upload/', `/upload/${params}/`);
+  }
+  return url;
+}
+
 // Fallback initial categories array as defined in requirement
 export const DEFAULT_CATEGORIES = [
   { id: 'electronics', name: 'Electronics', icon: 'fa-laptop' },
@@ -16,7 +30,22 @@ export const DEFAULT_CATEGORIES = [
   { id: 'gadgets', name: 'Gadgets', icon: 'fa-mobile-alt' }
 ];
 
+let cachedCategories = null;
+
 export async function fetchActiveCategories() {
+  if (cachedCategories && cachedCategories.length > 0) {
+    return cachedCategories;
+  }
+  try {
+    const sessionData = sessionStorage.getItem('shs_cached_categories');
+    if (sessionData) {
+      cachedCategories = JSON.parse(sessionData);
+      return cachedCategories;
+    }
+  } catch (e) {
+    console.warn('sessionStorage categories read error:', e);
+  }
+
   try {
     const snap = await getDocs(collection(db, 'categories'));
     const list = [];
@@ -34,17 +63,25 @@ export async function fetchActiveCategories() {
     });
 
     if (list.length > 0) {
+      cachedCategories = list;
+      try {
+        sessionStorage.setItem('shs_cached_categories', JSON.stringify(list));
+      } catch (e) {}
       return list;
     }
   } catch (err) {
     console.warn('Error fetching categories from Firestore, using default categories:', err);
   }
+  cachedCategories = DEFAULT_CATEGORIES;
   return DEFAULT_CATEGORIES;
 }
 
-export async function fetchPublishedProducts() {
+export async function fetchPublishedProducts(limitCount = null) {
   try {
-    const q = query(collection(db, 'products'), where('status', '==', 'published'));
+    let q = query(collection(db, 'products'), where('status', '==', 'published'));
+    if (limitCount && Number(limitCount) > 0) {
+      q = query(collection(db, 'products'), where('status', '==', 'published'), limit(Number(limitCount)));
+    }
     const snap = await getDocs(q);
     const products = [];
     snap.forEach(docSnap => {
@@ -112,7 +149,22 @@ export const DEFAULT_BANNERS = [
   }
 ];
 
+let cachedBanners = null;
+
 export async function fetchBanners() {
+  if (cachedBanners && cachedBanners.length > 0) {
+    return cachedBanners;
+  }
+  try {
+    const sessionData = sessionStorage.getItem('shs_cached_banners');
+    if (sessionData) {
+      cachedBanners = JSON.parse(sessionData);
+      return cachedBanners;
+    }
+  } catch (e) {
+    console.warn('sessionStorage banners read error:', e);
+  }
+
   try {
     const fetchPromise = (async () => {
       const snap = await getDocs(collection(db, 'banners'));
@@ -123,7 +175,12 @@ export async function fetchBanners() {
           list.push({ id: docSnap.id, ...data });
         }
       });
-      return list.length > 0 ? list : DEFAULT_BANNERS;
+      const result = list.length > 0 ? list : DEFAULT_BANNERS;
+      cachedBanners = result;
+      try {
+        sessionStorage.setItem('shs_cached_banners', JSON.stringify(result));
+      } catch (e) {}
+      return result;
     })();
 
     const timeoutPromise = new Promise(resolve => setTimeout(() => resolve(DEFAULT_BANNERS), 1200));
@@ -142,7 +199,8 @@ export function renderProductCard(product) {
   const isOutOfStock = !product.stock || Number(product.stock) <= 0;
   const productIdOrSlug = product.id || product.slug;
   const productUrl = `product-detail.html?id=${encodeURIComponent(productIdOrSlug)}`;
-  const imageSrc = product.images && product.images.length > 0 ? product.images[0] : 'https://via.placeholder.com/300?text=SHS+Bazar';
+  const rawImage = product.images && product.images.length > 0 ? product.images[0] : FALLBACK_IMAGE;
+  const imageSrc = getOptimizedImageUrl(rawImage, 300);
   const sellerId = product.sellerId || 'admin';
 
   const lang = localStorage.getItem('shs_lang') || 'bn';

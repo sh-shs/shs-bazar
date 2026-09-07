@@ -229,6 +229,7 @@
     import { generatePDFInvoice } from './assets/js/invoice.js';
     import { uploadMediaFile } from './assets/js/admin.js';
     import { showToast } from './assets/js/app.js';
+    import { FALLBACK_IMAGE } from './assets/js/products.js';
 
     let allOrders = [];
     let activeFilter = 'all';
@@ -324,7 +325,7 @@
 
           return `
             <div style="display: flex; gap: 10px; align-items: center; background: var(--bg-color); padding: 8px; border-radius: 6px; margin-bottom: 6px; border: 1px solid var(--border-color);">
-              <img src="${item.image || (item.images && item.images[0]) || 'https://via.placeholder.com/50'}" alt="${item.name || 'Item'}" style="width: 44px; height: 44px; object-fit: cover; border-radius: 4px;">
+                <img src="${item.image || (item.images && item.images[0]) || FALLBACK_IMAGE}" alt="${item.name || 'Item'}" style="width: 44px; height: 44px; object-fit: cover; border-radius: 4px;">
               <div style="flex: 1;">
                 <div style="font-weight: 600; font-size: 0.85rem; color: var(--text-primary);">${item.name || 'Unnamed Product'}</div>
                 <div style="font-size: 0.75rem; color: var(--text-muted);">
@@ -423,7 +424,7 @@
       document.getElementById('review-product-id').value = productId;
       document.getElementById('review-modal-title').textContent = productName;
       document.getElementById('review-modal-order-id').textContent = `Order #${orderId}`;
-      document.getElementById('review-modal-img').src = productImage || 'https://via.placeholder.com/50';
+      document.getElementById('review-modal-img').src = productImage || FALLBACK_IMAGE;
 
       const reviewKey = `${orderId}_${productId}`;
       const existingRev = existingUserReviews[reviewKey];
