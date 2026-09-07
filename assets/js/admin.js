@@ -470,45 +470,48 @@ export async function updateOrderStatus(orderId, orderStatus) {
     updatedAt: new Date()
   });
 
-  // Create notifications if status updated
+  // Create notifications if status updated with safety check
   try {
     const orderSnap = await getDoc(orderRef);
     if (orderSnap.exists()) {
       const orderData = orderSnap.data();
       const targetUserId = orderData.userId;
 
-      if (targetUserId) {
-        const userNotifsRef = collection(db, 'users', targetUserId, 'notifications');
-        const shortId = orderId.slice(-6).toUpperCase();
+      if (!targetUserId || targetUserId === 'guest') {
+        console.warn('Skipping notification creation: targetUserId is empty, undefined, or guest.', { orderId });
+        return;
+      }
 
-        // 1. Order Status Update Notification
-        await addDoc(userNotifsRef, {
-          type: 'order',
-          orderId: orderId,
-          title: 'Order Status Update',
-          message: `Your order #${shortId} status is now ${orderStatus}.`,
-          link: 'orders.html',
-          createdAt: new Date(),
-          isRead: false
-        });
+      const userNotifsRef = collection(db, 'users', targetUserId, 'notifications');
+      const shortId = orderId.slice(-6).toUpperCase();
 
-        // 2. Product Review Prompt Notification(s) if order is Delivered
-        if (orderStatus === 'Delivered' && Array.isArray(orderData.items)) {
-          for (const item of orderData.items) {
-            const prodId = item.id || item.productId;
-            const prodName = item.name || 'product';
-            await addDoc(userNotifsRef, {
-              type: 'review_prompt',
-              orderId: orderId,
-              relatedOrderId: orderId,
-              relatedProductId: prodId,
-              title: 'Please Rate Your Product',
-              message: `${prodName} প্রোডাক্টটি কেমন লেগেছে জানান`,
-              link: prodId ? `product-detail.html?id=${encodeURIComponent(prodId)}&openReview=true&orderId=${encodeURIComponent(orderId)}` : 'orders.html',
-              createdAt: new Date(),
-              isRead: false
-            });
-          }
+      // 1. Order Status Update Notification
+      await addDoc(userNotifsRef, {
+        type: 'order',
+        orderId: orderId,
+        title: 'Order Status Update',
+        message: `Your order #${shortId} status is now ${orderStatus}.`,
+        link: 'orders.html',
+        createdAt: new Date(),
+        isRead: false
+      });
+
+      // 2. Product Review Prompt Notification(s) if order is Delivered
+      if (orderStatus === 'Delivered' && Array.isArray(orderData.items)) {
+        for (const item of orderData.items) {
+          const prodId = item.id || item.productId;
+          const prodName = item.name || 'product';
+          await addDoc(userNotifsRef, {
+            type: 'review_prompt',
+            orderId: orderId,
+            relatedOrderId: orderId,
+            relatedProductId: prodId,
+            title: 'Please Rate Your Product',
+            message: `${prodName} প্রোডাক্টটি কেমন লেগেছে জানান`,
+            link: prodId ? `product-detail.html?id=${encodeURIComponent(prodId)}&openReview=true&orderId=${encodeURIComponent(orderId)}` : 'orders.html',
+            createdAt: new Date(),
+            isRead: false
+          });
         }
       }
     }
