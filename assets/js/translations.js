@@ -4,7 +4,7 @@ export const TRANSLATIONS = {
   en: {
     // Top Header & Navigation
     brandName: "SHS Bazar",
-    brandTagline: "OFFER OFFER OFFER",
+    brandTagline: "Online Shopping in Kushtia",
     searchPlaceholder: "Search products in Kushtia...",
 
     // Side Drawer Sections & Menu
@@ -44,11 +44,11 @@ export const TRANSLATIONS = {
     loadMore: "Load More",
 
     // Promo Banner & Newsletter
-    promoBannerTitle: "OFFER OFFER OFFER",
+    promoBannerTitle: "Special Wholesale Deals & Discounts",
     promoBannerDesc: "Special Wholesale Deals inside Kushtia! Delivery only ৳100 inside Kushtia town.",
     shopDealsNow: "Shop Deals Now",
     subscribeTitle: "Subscribe to Newsletter",
-    subscribeDesc: "Get instant SMS and Email notifications for local flash deals and discount coupons.",
+    subscribeDesc: "Get instant updates on local flash deals and discount coupons.",
     subscribeEmailPlaceholder: "Enter your email",
     subscribeBtn: "Subscribe",
 
@@ -159,8 +159,8 @@ export const TRANSLATIONS = {
     quickLinks: "Quick Links",
     customerCarePolicies: "Customer Care & Policies",
     shopAllProducts: "Shop All Products",
-    footerAboutText: "Your trusted multi-vendor local e-commerce platform in Kushtia, Bangladesh.",
-    taglineFooter: "Tagline: OFFER OFFER OFFER",
+    footerAboutText: "Your trusted local e-commerce platform in Kushtia, Bangladesh.",
+    taglineFooter: "Tagline: Quality Products & Fast Delivery in Kushtia",
     copyrightText: "All rights reserved. Kushtia, Bangladesh.",
     hotline: "Hotline",
     phone: "Phone",
@@ -171,7 +171,7 @@ export const TRANSLATIONS = {
   bn: {
     // Top Header & Navigation
     brandName: "SHS Bazar",
-    brandTagline: "অফার অফার অফার",
+    brandTagline: "কুষ্টিয়ার অনলাইন শপিং প্ল্যাটফর্ম",
     searchPlaceholder: "কুষ্টিয়ায় পণ্য খুঁজুন...",
 
     // Side Drawer Sections & Menu
@@ -211,11 +211,11 @@ export const TRANSLATIONS = {
     loadMore: "আরও দেখুন",
 
     // Promo Banner & Newsletter
-    promoBannerTitle: "অফার অফার অফার",
+    promoBannerTitle: "বিশেষ পাইকারি অফার ও ডিসকাউন্ট",
     promoBannerDesc: "কুষ্টিয়ায় বিশেষ পাইকারি অফার! কুষ্টিয়া শহরের মধ্যে ডেলিভারি চার্জ মাত্র ৳১০০।",
     shopDealsNow: "অফার দেখুন",
     subscribeTitle: "নিউজল্যাটারে সাবস্ক্রাইব করুন",
-    subscribeDesc: "স্থানীয় ফ্ল্যাশ ডিল এবং ডিসকাউন্ট কুপনের ইন্সট্যান্ট নোটিফিকেশন পান।",
+    subscribeDesc: "স্থানীয় ফ্ল্যাশ ডিল এবং ডিসকাউন্ট কুপনের তাৎক্ষণিক আপডেট পান।",
     subscribeEmailPlaceholder: "আপনার ইমেইল দিন",
     subscribeBtn: "সাবস্ক্রাইব",
 
@@ -326,8 +326,8 @@ export const TRANSLATIONS = {
     quickLinks: "গুরুত্বপূর্ণ লিংক",
     customerCarePolicies: "কাস্টমার কেয়ার ও পলিসি",
     shopAllProducts: "সকল পণ্য দেখুন",
-    footerAboutText: "কুষ্টিয়া, বাংলাদেশে আপনার বিশ্বস্ত বহুমুখী ই-কমার্স প্ল্যাটফর্ম।",
-    taglineFooter: "ট্যাগলাইন: অফার অফার অফার",
+    footerAboutText: "কুষ্টিয়া, বাংলাদেশে আপনার বিশ্বস্ত স্থানীয় ই-কমার্স প্ল্যাটফর্ম।",
+    taglineFooter: "ট্যাগলাইন: কুষ্টিয়ায় আপনার বিশ্বস্ত অনলাইন কেনাকাটার মাধ্যম",
     copyrightText: "সর্বস্বত্ব সংরক্ষিত। কুষ্টিয়া, বাংলাদেশ।",
     hotline: "হটলাইন",
     phone: "ফোন",
