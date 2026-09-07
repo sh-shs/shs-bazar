@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/png" href="assets/images/logo.png">
+  <link rel="apple-touch-icon" href="assets/images/logo.png">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notification - SHS Bazar</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <style>
+    .notifications-container {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 16px 16px 100px 16px;
+    }
+    .notifications-header-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .notifications-header-title {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--primary-color);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    body.dark-mode .notifications-header-title {
+      color: var(--accent-color);
+    }
+    .notifications-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Top Navigation Bar -->
+  <div class="page-top-bar">
+    <button class="back-btn" onclick="goBack()"><i class="fas fa-arrow-left"></i></button>
+    <span class="page-title" data-i18n="navNotification">Notification</span>
+  </div>
+
+  <div class="notifications-container">
+    <div id="notifications-list-container">
+      <div style="text-align: center; padding: 40px 20px; color: var(--text-muted);" class="glass-card">
+        <i class="fas fa-spinner fa-spin" style="font-size: 1.8rem; color: var(--primary-color); margin-bottom: 12px;"></i>
+        <p style="font-size: 0.9rem;" data-i18n="loadingProducts">Loading notifications...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation Bar -->
+  <nav class="bottom-nav">
+    <a href="index.html" class="nav-item">
+      <div class="nav-icon-wrap"><i class="fas fa-home"></i></div>
+      <span data-i18n="home">Home</span>
+    </a>
+    <a href="shop.html" class="nav-item">
+      <div class="nav-icon-wrap"><i class="fas fa-th-large"></i></div>
+      <span data-i18n="allCategories">Menu</span>
+    </a>
+    <div class="center-cart-wrapper">
+      <a href="cart.html" class="center-cart-shortcut" aria-label="Cart">
+        <i class="fas fa-shopping-cart"></i>
+        <span class="nav-cart-badge cart-count-badge">0</span>
+      </a>
+    </div>
+    <a href="notifications.html" class="nav-item active" id="nav-notification-btn">
+      <div class="nav-icon-wrap" style="position: relative;">
+        <i class="fas fa-bell"></i>
+        <span class="badge-count notification-count-badge" id="nav-notification-badge" style="display: none;">0</span>
+      </div>
+      <span data-i18n="navNotification">Notification</span>
+    </a>
+    <a href="profile.html" class="nav-item account-link">
+      <div class="nav-icon-wrap"><i class="fas fa-user"></i></div>
+      <span data-i18n="myAccount">Account</span>
+    </a>
+  </nav>
+
+  <script type="module" src="assets/js/firebase-config.js"></script>
+  <script type="module" src="assets/js/auth.js"></script>
+  <script type="module" src="assets/js/app.js"></script>
+  <script type="module">
+    import { onAuthStateUpdate } from './assets/js/auth.js';
+    import { renderNotificationsPage } from './assets/js/app.js';
+
+    onAuthStateUpdate(() => {
+      renderNotificationsPage();
+    });
+  </script>
+</body>
+</html>

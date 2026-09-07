@@ -311,73 +311,46 @@ export async function initNotifications() {
   });
 }
 
-export async function openNotificationModal() {
-  let modal = document.getElementById('notification-modal-overlay');
-  if (!modal) {
-    modal = document.createElement('div');
-    modal.id = 'notification-modal-overlay';
-    modal.className = 'notification-modal-overlay';
-    modal.onclick = (e) => {
-      if (e.target === modal) closeNotificationModal();
-    };
-    document.body.appendChild(modal);
-  }
+export async function renderNotificationsPage() {
+  const container = document.getElementById('notifications-list-container');
+  if (!container) return;
 
   const lang = getCurrentLang();
   const t = TRANSLATIONS[lang] || TRANSLATIONS.bn;
 
-  modal.innerHTML = `
-    <div class="notification-modal-card">
-      <div class="notification-modal-header">
-        <div class="notification-modal-title">
-          <i class="fas fa-bell"></i>
-          <span>${t.navNotification || 'Notification'}</span>
-        </div>
-        <button type="button" class="notification-modal-close" onclick="closeNotificationModal()" aria-label="Close">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-      <div class="notification-modal-body" id="notification-modal-body">
-        <div style="text-align: center; padding: 24px; color: var(--text-muted);">
-          <i class="fas fa-spinner fa-spin" style="font-size: 1.5rem; margin-bottom: 8px;"></i>
-          <p style="font-size: 0.85rem;">${lang === 'bn' ? 'নোটিফিকেশন লোড হচ্ছে...' : 'Loading notifications...'}</p>
-        </div>
-      </div>
-    </div>
-  `;
-
-  modal.classList.add('active');
-
   const notifications = await fetchUserNotifications();
-  const bodyEl = document.getElementById('notification-modal-body');
 
-  if (bodyEl) {
-    if (notifications.length > 0) {
-      bodyEl.innerHTML = notifications.map(item => `
-        <div class="notification-item" onclick="window.location.href='${item.link || 'index.html'}'">
-          <div class="notification-item-icon ${item.type === 'order' ? 'type-order' : 'type-offer'}">
-            <i class="${item.icon}"></i>
-          </div>
-          <div class="notification-item-content">
-            <div class="notification-item-title">
-              <span>${item.title}</span>
+  if (notifications.length > 0) {
+    container.innerHTML = `
+      <div class="notifications-list">
+        ${notifications.map(item => `
+          <div class="notification-item" onclick="window.location.href='${item.link || 'index.html'}'">
+            <div class="notification-item-icon ${item.type === 'order' ? 'type-order' : 'type-offer'}">
+              <i class="${item.icon}"></i>
             </div>
-            <div class="notification-item-msg">${item.message}</div>
-            <div class="notification-item-time">${formatRelativeTime(item.timestamp, lang)}</div>
+            <div class="notification-item-content">
+              <div class="notification-item-title">
+                <span>${item.title}</span>
+              </div>
+              <div class="notification-item-msg">${item.message}</div>
+              <div class="notification-item-time">${formatRelativeTime(item.timestamp, lang)}</div>
+            </div>
           </div>
-        </div>
-      `).join('');
+        `).join('')}
+      </div>
+    `;
 
-      // Mark notifications as read when viewed
-      const allIds = notifications.map(n => n.id);
-      markNotificationsRead(allIds);
+    // Mark notifications as read when viewed
+    const allIds = notifications.map(n => n.id);
+    markNotificationsRead(allIds);
 
-      // Clear badge
-      document.querySelectorAll('#nav-notification-badge, .notification-count-badge').forEach(badge => {
-        badge.style.display = 'none';
-      });
-    } else {
-      bodyEl.innerHTML = `
+    // Clear badge
+    document.querySelectorAll('#nav-notification-badge, .notification-count-badge').forEach(badge => {
+      badge.style.display = 'none';
+    });
+  } else {
+    container.innerHTML = `
+      <div class="glass-card">
         <div class="notification-empty-state">
           <div class="notification-empty-icon">
             <i class="fas fa-bell-slash"></i>
@@ -385,14 +358,9 @@ export async function openNotificationModal() {
           <h4>${t.noNotifications || 'কোনো নোটিফিকেশন নেই'}</h4>
           <p>${t.noNotificationsDesc || 'আপনার সমস্ত তথ্য আপডেট রয়েছে! অর্ডার স্ট্যাটাস ও বিশেষ অফারের নোটিফিকেশন এখানে দেখাবে।'}</p>
         </div>
-      `;
-    }
+      </div>
+    `;
   }
-}
-
-export function closeNotificationModal() {
-  const modal = document.getElementById('notification-modal-overlay');
-  if (modal) modal.classList.remove('active');
 }
 
 function formatRelativeTime(timestamp, lang) {
@@ -414,8 +382,7 @@ function formatRelativeTime(timestamp, lang) {
   }
 }
 
-window.openNotificationModal = openNotificationModal;
-window.closeNotificationModal = closeNotificationModal;
+window.renderNotificationsPage = renderNotificationsPage;
 window.initNotifications = initNotifications;
 
 window.handleCopyWebsiteUrl = () => {
@@ -863,6 +830,10 @@ async function initApp() {
   });
 
   initNotifications();
+
+  if (document.getElementById('notifications-list-container')) {
+    renderNotificationsPage();
+  }
 
   const copyrightYearEl = document.getElementById('copyright-year');
   if (copyrightYearEl) {
