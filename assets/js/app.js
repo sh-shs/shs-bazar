@@ -252,7 +252,7 @@ export async function fetchUserNotifications() {
   const notifications = [];
 
   // 1. Fetch user specific notifications from users/{uid}/notifications if logged in
-  if (currentUser) {
+  if (currentUser && currentUser.uid) {
     try {
       const notifRef = collection(db, 'users', currentUser.uid, 'notifications');
       const snap = await getDocs(query(notifRef, limit(30)));
@@ -306,7 +306,27 @@ export async function fetchUserNotifications() {
     }
   }
 
-  // 2. Default Offer / Promotion Notification
+  // 2. Fetch public announcements from 'announcements' collection (open to all users & visitors)
+  try {
+    const annRef = collection(db, 'announcements');
+    const annSnap = await getDocs(query(annRef, limit(30)));
+    annSnap.forEach(docSnap => {
+      const data = docSnap.data();
+      notifications.push({
+        id: `announcement_${docSnap.id}`,
+        type: 'announcement',
+        title: data.title || (lang === 'bn' ? 'নতুন ঘোষণা' : 'Announcement'),
+        message: data.message || '',
+        timestamp: data.createdAt?.toDate ? data.createdAt.toDate().getTime() : (data.timestamp || Date.now()),
+        icon: 'fas fa-bullhorn',
+        link: data.link || (data.productId ? `product-detail.html?id=${data.productId}` : 'shop.html')
+      });
+    });
+  } catch (err) {
+    console.warn('Could not fetch public announcements:', err);
+  }
+
+  // 3. Default Offer / Promotion Notification
   notifications.push({
     id: 'offer_kushtia_wholesale_deal',
     type: 'offer',

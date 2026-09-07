@@ -399,6 +399,21 @@ export async function saveAdminProduct(productData, productId = null) {
       payload.createdAt = new Date();
       payload.status = 'published';
       const docRef = await addDoc(collection(db, 'products'), payload);
+
+      // Create a public announcement in 'announcements' collection for new product additions
+      try {
+        await addDoc(collection(db, 'announcements'), {
+          type: 'announcement',
+          title: 'নতুন প্রোডাক্ট যুক্ত হয়েছে!',
+          message: `${payload.name || 'নতুন প্রোডাক্ট'} - এখন পাওয়া যাচ্ছে SHS Bazar এ!`,
+          link: `product-detail.html?id=${docRef.id}`,
+          productId: docRef.id,
+          createdAt: new Date()
+        });
+      } catch (annErr) {
+        console.warn('Error creating public announcement for new product:', annErr);
+      }
+
       return docRef.id;
     }
   } catch (err) {
