@@ -381,18 +381,6 @@
           <i class="fas fa-chevron-right" style="color: var(--text-muted); font-size: 0.8rem;"></i>
         </div>
 
-        <!-- Notifications -->
-        <div class="menu-item-card" onclick="openNotificationsModal()">
-          <div class="menu-icon-box" style="background: #EDE9FE; color: #7C3AED;">
-            <i class="fas fa-bell"></i>
-          </div>
-          <div class="menu-text-wrap">
-            <div class="menu-title">Notifications</div>
-            <div class="menu-subtitle">Updates & offer alerts</div>
-          </div>
-          <i class="fas fa-chevron-right" style="color: var(--text-muted); font-size: 0.8rem;"></i>
-        </div>
-
         <!-- Change Password -->
         <div class="menu-item-card" onclick="openChangePasswordModal()">
           <div class="menu-icon-box" style="background: #DCFCE7; color: #16A34A;">
@@ -556,44 +544,6 @@
           <button type="submit" class="btn-primary" style="font-size: 0.85rem; padding: 8px 20px;">Save Numbers</button>
         </div>
       </form>
-    </div>
-  </div>
-
-  <!-- Notifications Modal -->
-  <div id="notifications-modal" class="profile-modal-overlay" onclick="if(event.target===this) closeNotificationsModal();">
-    <div class="profile-modal-card">
-      <div class="modal-header-title">
-        <i class="fas fa-bell" style="color: var(--accent-color);"></i> Notification Settings
-      </div>
-      <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 14px;">
-        Manage how you receive order updates and discount offer alerts.
-      </p>
-
-      <div class="toggle-switch-wrap">
-        <div>
-          <div style="font-weight: 700; font-size: 0.9rem;">Order Status Alerts</div>
-          <div style="font-size: 0.75rem; color: var(--text-muted);">Receive real-time notifications on order status changes</div>
-        </div>
-        <label class="switch">
-          <input type="checkbox" id="notif-order-status" checked onchange="handleSaveNotifications()">
-          <span class="slider"></span>
-        </label>
-      </div>
-
-      <div class="toggle-switch-wrap" style="border-bottom: none;">
-        <div>
-          <div style="font-weight: 700; font-size: 0.9rem;">Promotional Offers</div>
-          <div style="font-size: 0.75rem; color: var(--text-muted);">Get notified about special Kushtia discount deals</div>
-        </div>
-        <label class="switch">
-          <input type="checkbox" id="notif-promos" checked onchange="handleSaveNotifications()">
-          <span class="slider"></span>
-        </label>
-      </div>
-
-      <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
-        <button type="button" onclick="closeNotificationsModal()" class="btn-primary" style="font-size: 0.85rem; padding: 8px 20px;">Done</button>
-      </div>
     </div>
   </div>
 
@@ -1167,34 +1117,6 @@
       } catch (err) {
         console.error('Error saving payment methods:', err);
         alert('Failed to save payment methods.');
-      }
-    };
-
-    // Notifications Modal
-    window.openNotificationsModal = () => {
-      const notifs = activeProfile?.notifications || { orderStatus: true, promos: true };
-      document.getElementById('notif-order-status').checked = notifs.orderStatus !== false;
-      document.getElementById('notif-promos').checked = notifs.promos !== false;
-      document.getElementById('notifications-modal').classList.add('active');
-    };
-
-    window.closeNotificationsModal = () => {
-      document.getElementById('notifications-modal').classList.remove('active');
-    };
-
-    window.handleSaveNotifications = async () => {
-      if (!activeUser) return;
-
-      const notifications = {
-        orderStatus: document.getElementById('notif-order-status').checked,
-        promos: document.getElementById('notif-promos').checked
-      };
-
-      try {
-        await updateDoc(doc(db, 'users', activeUser.uid), { notifications, updatedAt: new Date() });
-        if (activeProfile) activeProfile.notifications = notifications;
-      } catch (err) {
-        console.error('Error saving notification settings:', err);
       }
     };
 
