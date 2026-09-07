@@ -735,6 +735,16 @@ window.goBack = () => {
   }
 };
 
+export function focusSearchInput(e) {
+  const input = document.getElementById('search-input');
+  if (input) {
+    if (e) e.preventDefault();
+    input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    input.focus();
+  }
+}
+window.focusSearchInput = focusSearchInput;
+
 // Search Setup
 export function initSearch(allProducts) {
   const input = document.getElementById('search-input');
@@ -892,6 +902,18 @@ async function initApp() {
   const copyrightYearEl = document.getElementById('copyright-year');
   if (copyrightYearEl) {
     copyrightYearEl.textContent = new Date().getFullYear();
+  }
+
+  // Check for focusSearch URL parameter
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('focusSearch') === 'true') {
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) {
+      setTimeout(() => {
+        searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        searchInput.focus();
+      }, 150);
+    }
   }
 
   // If on homepage, render catalog sections
