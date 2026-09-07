@@ -318,11 +318,11 @@
 
           const reviewButtonHTML = isDelivered && productId ? `
             <div style="margin-top: 6px;">
-              <button onclick="window.openReviewModal('${o.id}', '${productId}', '${(item.name || '').replace(/'/g, "\\'")}', '${item.image || (item.images && item.images[0]) || ''}')"
+              <a href="product-detail.html?id=${encodeURIComponent(productId)}&openReview=true&orderId=${encodeURIComponent(o.id)}"
                 class="${review ? 'btn-outline' : 'btn-accent'}"
-                style="font-size: 0.75rem; padding: 5px 12px; border-radius: 6px; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; text-decoration: none;">
-                <i class="fas fa-star" style="color: #F59E0B;"></i> ${review ? 'Edit Review' : 'Write a Review'}
-              </button>
+                style="font-size: 0.75rem; padding: 5px 12px; border-radius: 6px; display: inline-flex; align-items: center; gap: 5px; text-decoration: none;">
+                <i class="fas fa-star" style="color: #F59E0B;"></i> Write a Review
+              </a>
             </div>
           ` : '';
 
