@@ -1432,6 +1432,274 @@ body.dark-mode .skeleton-line,
   transform: translateY(2px) scale(0.95);
 }
 
+/* Bottom Nav Notification Badge */
+.notification-count-badge {
+  position: absolute;
+  top: -4px;
+  right: -5px;
+  background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+  color: #FFFFFF;
+  font-size: 0.62rem;
+  font-weight: 800;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  border: 1.5px solid #FFFFFF;
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4);
+  line-height: 1;
+  z-index: 2;
+}
+
+body.dark-mode .notification-count-badge {
+  border-color: #1E293B;
+}
+
+/* Notification Modal Overlay */
+.notification-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 10000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+  padding: 0;
+}
+
+@media (min-width: 640px) {
+  .notification-modal-overlay {
+    align-items: center;
+    padding: 16px;
+  }
+}
+
+.notification-modal-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Notification Modal Card */
+.notification-modal-card {
+  background: var(--card-bg);
+  color: var(--text-primary);
+  width: 100%;
+  max-width: 480px;
+  max-height: 82vh;
+  border-radius: 24px 24px 0 0;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-color);
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+@media (min-width: 640px) {
+  .notification-modal-card {
+    border-radius: 20px;
+    max-height: 85vh;
+    transform: scale(0.92);
+  }
+}
+
+.notification-modal-overlay.active .notification-modal-card {
+  transform: translateY(0);
+}
+
+@media (min-width: 640px) {
+  .notification-modal-overlay.active .notification-modal-card {
+    transform: scale(1);
+  }
+}
+
+/* Notification Modal Header */
+.notification-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--card-bg);
+}
+
+.notification-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--primary-color);
+}
+
+body.dark-mode .notification-modal-title {
+  color: var(--accent-color);
+}
+
+.notification-modal-title i {
+  color: var(--accent-color);
+  font-size: 1.2rem;
+}
+
+.notification-modal-close {
+  background: var(--bg-color);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+.notification-modal-close:hover {
+  background: var(--border-color);
+  color: var(--text-primary);
+}
+
+/* Notification Modal Body */
+.notification-modal-body {
+  padding: 16px;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Notification Item Card */
+.notification-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px;
+  background: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  color: var(--text-primary);
+  transition: all 0.2s ease;
+  cursor: pointer;
+  position: relative;
+}
+
+.notification-item:hover {
+  border-color: var(--primary-color);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.notification-item-icon {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+}
+
+.notification-item-icon.type-order {
+  background: var(--primary-light);
+  color: var(--primary-color);
+}
+
+body.dark-mode .notification-item-icon.type-order {
+  color: #34D399;
+}
+
+.notification-item-icon.type-offer {
+  background: rgba(245, 130, 10, 0.12);
+  color: var(--accent-color);
+}
+
+.notification-item-content {
+  flex: 1;
+}
+
+.notification-item-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.notification-item-msg {
+  font-size: 0.82rem;
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
+.notification-item-time {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  margin-top: 6px;
+}
+
+/* Notification Empty State */
+.notification-empty-state {
+  text-align: center;
+  padding: 40px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.notification-empty-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: var(--primary-light);
+  color: var(--primary-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-sm);
+}
+
+body.dark-mode .notification-empty-icon {
+  background: rgba(245, 130, 10, 0.15);
+  color: var(--accent-color);
+}
+
+.notification-empty-state h4 {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.notification-empty-state p {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  max-width: 320px;
+  line-height: 1.4;
+}
+
 /* Bottom Navigation Bar (Floating Mobile & Responsive) */
 body {
   padding-bottom: calc(90px + env(safe-area-inset-bottom, 12px));
