@@ -477,18 +477,19 @@ export async function updateOrderStatus(orderId, orderStatus) {
           isRead: false
         });
 
-        // 2. Product Review Prompt Notification(s) if order is Confirmed
-        if (orderStatus === 'Confirmed' && Array.isArray(orderData.items)) {
+        // 2. Product Review Prompt Notification(s) if order is Delivered
+        if (orderStatus === 'Delivered' && Array.isArray(orderData.items)) {
           for (const item of orderData.items) {
             const prodId = item.id || item.productId;
             const prodName = item.name || 'product';
             await addDoc(userNotifsRef, {
               type: 'review_prompt',
               orderId: orderId,
+              relatedOrderId: orderId,
               relatedProductId: prodId,
-              title: 'প্রোডাক্ট রিভিউ দিন',
-              message: `আপনার কনফার্ম হওয়া অর্ডার #${shortId}-এর "${prodName}" প্রোডাক্টটির একটি রিভিউ দিন!`,
-              link: prodId ? `product-detail.html?id=${encodeURIComponent(prodId)}&openReview=true` : 'orders.html',
+              title: 'Please Rate Your Product',
+              message: `${prodName} প্রোডাক্টটি কেমন লেগেছে জানান`,
+              link: prodId ? `product-detail.html?id=${encodeURIComponent(prodId)}&openReview=true&orderId=${encodeURIComponent(orderId)}` : 'orders.html',
               createdAt: new Date(),
               isRead: false
             });
