@@ -449,10 +449,56 @@ export async function fetchOrdersFromDB() {
 }
 
 export async function updateOrderStatus(orderId, orderStatus) {
-  await updateDoc(doc(db, 'orders', orderId), {
+  const orderRef = doc(db, 'orders', orderId);
+  await updateDoc(orderRef, {
     orderStatus,
     updatedAt: new Date()
   });
+
+  // Create notifications if status updated
+  try {
+    const orderSnap = await getDoc(orderRef);
+    if (orderSnap.exists()) {
+      const orderData = orderSnap.data();
+      const targetUserId = orderData.userId;
+
+      if (targetUserId) {
+        const userNotifsRef = collection(db, 'users', targetUserId, 'notifications');
+        const shortId = orderId.slice(-6).toUpperCase();
+
+        // 1. Order Status Update Notification
+        await addDoc(userNotifsRef, {
+          type: 'order',
+          orderId: orderId,
+          title: 'Order Status Update',
+          message: `Your order #${shortId} status is now ${orderStatus}.`,
+          link: 'orders.html',
+          createdAt: new Date(),
+          isRead: false
+        });
+
+        // 2. Product Review Prompt Notification(s) if order is Confirmed
+        if (orderStatus === 'Confirmed' && Array.isArray(orderData.items)) {
+          for (const item of orderData.items) {
+            const prodId = item.id || item.productId;
+            const prodName = item.name || 'product';
+            await addDoc(userNotifsRef, {
+              type: 'review_prompt',
+              orderId: orderId,
+              relatedProductId: prodId,
+              title: 'প্রোডাক্ট রিভিউ দিন',
+              message: `আপনার কনফার্ম হওয়া অর্ডার #${shortId}-এর "${prodName}" প্রোডাক্টটির একটি রিভিউ দিন!`,
+              link: prodId ? `product-detail.html?id=${encodeURIComponent(prodId)}&openReview=true` : 'orders.html',
+              createdAt: new Date(),
+              isRead: false
+            });
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.error('Error creating notifications on updateOrderStatus:', err);
+  }
 }
 
 export async function updatePaymentStatus(orderId, paymentStatus) {

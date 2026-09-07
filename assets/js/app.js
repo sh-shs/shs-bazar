@@ -251,34 +251,62 @@ export async function fetchUserNotifications() {
   const lang = getCurrentLang();
   const notifications = [];
 
-  // 1. Fetch Order notifications if user is logged in
+  // 1. Fetch user specific notifications from users/{uid}/notifications if logged in
   if (currentUser) {
     try {
-      const q = query(collection(db, 'orders'), where('userId', '==', currentUser.uid), limit(15));
-      const snap = await getDocs(q);
+      const notifRef = collection(db, 'users', currentUser.uid, 'notifications');
+      const snap = await getDocs(query(notifRef, limit(30)));
       snap.forEach(docSnap => {
-        const orderData = docSnap.data();
-        const orderId = docSnap.id;
-        const shortId = orderId.slice(-6).toUpperCase();
-        const status = orderData.orderStatus || 'Pending';
+        const data = docSnap.data();
+        let icon = 'fas fa-bell';
+        if (data.type === 'order') icon = 'fas fa-box';
+        else if (data.type === 'review_prompt') icon = 'fas fa-star';
+        else if (data.type === 'offer') icon = 'fas fa-tags';
+
         notifications.push({
-          id: `order_${orderId}_${status}`,
-          type: 'order',
-          title: lang === 'bn' ? 'অর্ডার স্ট্যাটাস আপডেট' : 'Order Status Update',
-          message: lang === 'bn'
-            ? `আপনার অর্ডার #${shortId} ${getStatusTextBn(status)} অবস্থায় রয়েছে।`
-            : `Your order #${shortId} status is ${status}.`,
-          timestamp: orderData.createdAt?.toDate ? orderData.createdAt.toDate().getTime() : Date.now(),
-          icon: 'fas fa-box',
-          link: 'orders.html'
+          id: docSnap.id,
+          type: data.type || 'general',
+          title: data.title || (lang === 'bn' ? 'নোটিফিকেশন' : 'Notification'),
+          message: data.message || '',
+          timestamp: data.createdAt?.toDate ? data.createdAt.toDate().getTime() : (data.timestamp || Date.now()),
+          icon: icon,
+          link: data.link || 'index.html',
+          relatedProductId: data.relatedProductId || null
         });
       });
     } catch (err) {
-      console.warn('Could not fetch user order notifications:', err);
+      console.warn('Could not fetch user private notifications:', err);
+    }
+
+    // Fallback order status summary if no saved notification documents yet
+    if (notifications.filter(n => n.type === 'order').length === 0) {
+      try {
+        const q = query(collection(db, 'orders'), where('userId', '==', currentUser.uid), limit(15));
+        const snap = await getDocs(q);
+        snap.forEach(docSnap => {
+          const orderData = docSnap.data();
+          const orderId = docSnap.id;
+          const shortId = orderId.slice(-6).toUpperCase();
+          const status = orderData.orderStatus || 'Pending';
+          notifications.push({
+            id: `order_${orderId}_${status}`,
+            type: 'order',
+            title: lang === 'bn' ? 'অর্ডার স্ট্যাটাস আপডেট' : 'Order Status Update',
+            message: lang === 'bn'
+              ? `আপনার অর্ডার #${shortId} ${getStatusTextBn(status)} অবস্থায় রয়েছে।`
+              : `Your order #${shortId} status is ${status}.`,
+            timestamp: orderData.createdAt?.toDate ? orderData.createdAt.toDate().getTime() : Date.now(),
+            icon: 'fas fa-box',
+            link: 'orders.html'
+          });
+        });
+      } catch (err) {
+        console.warn('Could not fetch user order notifications:', err);
+      }
     }
   }
 
-  // 2. Offer / Promotion Notification
+  // 2. Default Offer / Promotion Notification
   notifications.push({
     id: 'offer_kushtia_wholesale_deal',
     type: 'offer',
@@ -323,9 +351,14 @@ export async function renderNotificationsPage() {
   if (notifications.length > 0) {
     container.innerHTML = `
       <div class="notifications-list">
-        ${notifications.map(item => `
+        ${notifications.map(item => {
+          let iconClass = 'type-offer';
+          if (item.type === 'order') iconClass = 'type-order';
+          else if (item.type === 'review_prompt') iconClass = 'type-review';
+
+          return `
           <div class="notification-item" onclick="window.location.href='${item.link || 'index.html'}'">
-            <div class="notification-item-icon ${item.type === 'order' ? 'type-order' : 'type-offer'}">
+            <div class="notification-item-icon ${iconClass}">
               <i class="${item.icon}"></i>
             </div>
             <div class="notification-item-content">
@@ -336,7 +369,8 @@ export async function renderNotificationsPage() {
               <div class="notification-item-time">${formatRelativeTime(item.timestamp, lang)}</div>
             </div>
           </div>
-        `).join('')}
+          `;
+        }).join('')}
       </div>
     `;
 
