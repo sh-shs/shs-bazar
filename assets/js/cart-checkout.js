@@ -228,6 +228,25 @@ export async function placeOrder(orderData) {
 
     const docRef = await addDoc(collection(db, 'orders'), sanitizedOrder);
 
+    // Create "Order Placed" notification in users/{userId}/notifications for logged-in user
+    if (sanitizedOrder.userId && sanitizedOrder.userId !== 'guest') {
+      try {
+        const userNotifsRef = collection(db, 'users', sanitizedOrder.userId, 'notifications');
+        const shortId = docRef.id.slice(-6).toUpperCase();
+        await addDoc(userNotifsRef, {
+          type: 'order',
+          orderId: docRef.id,
+          title: 'Order Placed',
+          message: `আপনার অর্ডার #${shortId} সফলভাবে গ্রহণ করা হয়েছে।`,
+          link: 'orders.html',
+          createdAt: new Date(),
+          isRead: false
+        });
+      } catch (notifErr) {
+        console.warn('Could not save Order Placed notification:', notifErr);
+      }
+    }
+
     // Clear cart on success
     localStorage.removeItem('bb_cart');
     return docRef.id;

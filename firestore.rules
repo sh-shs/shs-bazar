@@ -32,8 +32,8 @@ service cloud.firestore {
       allow delete: if isSuperAdmin();
 
       match /notifications/{notificationId} {
-        allow read: if isSignedIn() && (request.auth.uid == userId || isSuperAdmin());
-        allow create, update, delete: if isSuperAdmin() || (isSignedIn() && request.auth.uid == userId);
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow create, update, delete: if isSuperAdmin() || (request.auth != null && request.auth.uid == userId);
       }
     }
 
@@ -63,6 +63,12 @@ service cloud.firestore {
 
     // Categories collection
     match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if isSuperAdmin();
+    }
+
+    // Announcements collection (for public notifications like new product additions)
+    match /announcements/{announcementId} {
       allow read: if true;
       allow write: if isSuperAdmin();
     }
