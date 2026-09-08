@@ -19,61 +19,83 @@
     </div>
   </div>
 
-  <div id="login-page-content" style="display: none;">
-  <div class="page-top-bar">
-    <button class="back-btn" onclick="goBack()"><i class="fas fa-arrow-left"></i></button>
-    <span class="page-title">Account Login</span>
-  </div>
+  <div id="login-page-content" class="login-page-container" style="display: none;">
+    <!-- Ambient Background Blobs -->
+    <div class="login-bg-blob login-bg-blob-1"></div>
+    <div class="login-bg-blob login-bg-blob-2"></div>
+    <div class="login-bg-blob login-bg-blob-3"></div>
 
-  <div class="section-wrapper" style="max-width: 450px; margin: 0 auto;">
-    <div class="glass-card" style="padding: 24px;">
-      <div style="text-align: center; margin-bottom: 20px;">
-        <img src="assets/images/logo.png" style="height: 50px; border-radius: 6px;" alt="SHS Bazar">
-        <h2 style="color: var(--primary-color); font-size: 1.3rem; margin-top: 8px;">Welcome to SHS Bazar</h2>
-        <p style="font-size: 0.8rem; color: var(--text-muted);">Sign in to your account</p>
+    <div class="page-top-bar" style="position: relative; z-index: 10;">
+      <button class="back-btn" onclick="goBack()"><i class="fas fa-arrow-left"></i></button>
+      <span class="page-title">Account Login</span>
+    </div>
+
+    <div class="section-wrapper" style="max-width: 440px; margin: 0 auto; position: relative; z-index: 10; width: 100%; padding-top: 24px; padding-bottom: 32px;">
+    <div class="login-card">
+      <div class="login-header-wrapper">
+        <div class="login-logo-container">
+          <img src="assets/images/logo.png" alt="SHS Bazar" class="login-logo-img">
+        </div>
+        <h2 class="login-title">Welcome to SHS Bazar</h2>
+        <p class="login-subtitle">Sign in to your account</p>
       </div>
 
       <!-- Google Sign In Button -->
-      <button id="google-signin-btn" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); background: #FFF; border-radius: var(--radius-sm); font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 16px;">
-        <i class="fab fa-google" style="color: #EA4335;"></i> Sign in with Google
+      <button id="google-signin-btn" class="btn-google-signin">
+        <i class="fab fa-google" style="color: #EA4335; font-size: 1.1rem;"></i> Sign in with Google
       </button>
 
-      <div style="text-align: center; margin-bottom: 16px; color: #888; font-size: 0.8rem;">OR WITH EMAIL</div>
+      <div class="auth-divider-wrap">
+        <span>OR WITH EMAIL</span>
+      </div>
 
       <form id="auth-form">
         <div class="form-group" id="group-name" style="display: none;">
           <label class="form-label">Full Name</label>
-          <input type="text" id="auth-name" class="form-control" placeholder="Enter full name">
+          <div class="input-icon-group">
+            <i class="fas fa-user input-icon-left"></i>
+            <input type="text" id="auth-name" class="input-with-icon" placeholder="Enter full name">
+          </div>
         </div>
 
         <div class="form-group">
           <label class="form-label">Email Address *</label>
-          <input type="email" id="auth-email" class="form-control" required placeholder="name@domain.com">
+          <div class="input-icon-group">
+            <i class="fas fa-envelope input-icon-left"></i>
+            <input type="email" id="auth-email" class="input-with-icon" required placeholder="name@domain.com">
+          </div>
         </div>
 
         <div class="form-group">
           <label class="form-label">Password *</label>
-          <input type="password" id="auth-pass" class="form-control" required placeholder="******">
+          <div class="input-icon-group">
+            <i class="fas fa-lock input-icon-left"></i>
+            <input type="password" id="auth-pass" class="input-with-icon input-with-toggle" required placeholder="******">
+            <button type="button" id="password-toggle-btn" class="password-toggle-btn" aria-label="Toggle password visibility">
+              <i class="far fa-eye" id="password-toggle-icon"></i>
+            </button>
+          </div>
         </div>
 
-        <button type="submit" id="auth-submit-btn" class="btn-primary" style="width: 100%; padding: 10px; font-size: 0.95rem;">Login</button>
+        <button type="submit" id="auth-submit-btn" class="auth-submit-btn-gradient" style="margin-top: 6px;">Login</button>
       </form>
 
       <!-- Toggle Signup/Login Mode -->
-      <div style="text-align: center; margin-top: 16px; font-size: 0.85rem;">
-        <span id="toggle-prompt">Don't have an account?</span>
-        <a href="#" id="toggle-mode-btn" style="color: var(--accent-color); font-weight: bold; margin-left: 4px;">Sign Up</a>
+      <div style="text-align: center; margin-top: 20px; font-size: 0.88rem;">
+        <span id="toggle-prompt" style="color: var(--text-muted);">Don't have an account?</span>
+        <a href="#" id="toggle-mode-btn" class="auth-link-animated auth-link-accent" style="margin-left: 6px;">Sign Up</a>
       </div>
 
       <!-- Forgot Password -->
-      <div style="text-align: center; margin-top: 10px; font-size: 0.8rem;">
-        <a href="#" id="forgot-pass-btn" style="color: var(--text-muted);">Forgot Password?</a>
+      <div style="text-align: center; margin-top: 12px; font-size: 0.82rem;">
+        <a href="#" id="forgot-pass-btn" class="auth-link-animated auth-link-muted">Forgot Password?</a>
       </div>
 
       <!-- Mobile OTP Login Stub -->
-      <div style="margin-top: 20px; border-top: 1px dashed var(--border-color); padding-top: 16px; text-align: center;">
-        <button id="otp-stub-btn" class="btn-outline" style="width: 100%; font-size: 0.85rem; opacity: 0.8;">
-          <i class="fas fa-mobile-alt"></i> Mobile OTP Login <span style="font-size: 0.65rem; background: var(--warning-color); color: #FFF; padding: 1px 4px; border-radius: 4px;">Coming Soon</span>
+      <div class="otp-stub-container">
+        <button id="otp-stub-btn" class="otp-stub-btn">
+          <i class="fas fa-mobile-alt"></i> Mobile OTP Login
+          <span class="otp-coming-soon-badge">Coming Soon</span>
         </button>
       </div>
     </div>
@@ -194,6 +216,19 @@
       document.getElementById('otp-stub-btn')?.addEventListener('click', () => {
         showToast('Mobile OTP Login is coming soon!');
       });
+
+      // Password visibility toggle handler
+      const passInput = document.getElementById('auth-pass');
+      const passToggleBtn = document.getElementById('password-toggle-btn');
+      const passToggleIcon = document.getElementById('password-toggle-icon');
+
+      if (passInput && passToggleBtn && passToggleIcon) {
+        passToggleBtn.addEventListener('click', () => {
+          const isPassword = passInput.type === 'password';
+          passInput.type = isPassword ? 'text' : 'password';
+          passToggleIcon.className = isPassword ? 'far fa-eye-slash' : 'far fa-eye';
+        });
+      }
     }
 
     if (document.readyState === 'loading') {
