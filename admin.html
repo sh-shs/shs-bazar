@@ -551,6 +551,9 @@
             <label class="form-label">Category Image URL or Upload</label>
             <input type="text" id="cat-image" class="form-control" placeholder="https://example.com/image.jpg" style="margin-bottom: 6px;">
             <input type="file" id="cat-image-file" class="form-control" accept="image/*">
+            <small style="color: var(--text-muted); font-size: 0.75rem; display: block; margin-top: 4px;">
+              মিনিমাম রেজুলেশন: 200x200 পিক্সেল (Min resolution: 200x200px)
+            </small>
           </div>
           <div class="form-group">
             <label class="form-label">FontAwesome Icon Class (Optional)</label>
@@ -1705,6 +1708,32 @@
       try {
         const imageFile = document.getElementById('cat-image-file')?.files[0];
         if (imageFile) {
+          // Validate minimum resolution (200x200px)
+          try {
+            await new Promise((resolve, reject) => {
+              const img = new Image();
+              const url = URL.createObjectURL(imageFile);
+              img.onload = () => {
+                URL.revokeObjectURL(url);
+                if (img.width < 200 || img.height < 200) {
+                  reject(new Error(`ছবির রেজুলেশন কমপক্ষে 200x200px হতে হবে (বর্তমান: ${img.width}x${img.height}px)`));
+                } else {
+                  resolve(true);
+                }
+              };
+              img.onerror = () => {
+                URL.revokeObjectURL(url);
+                reject(new Error('অবৈধ ছবি ফাইল।'));
+              };
+              img.src = url;
+            });
+          } catch (resErr) {
+            showToast(resErr.message);
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Save Category';
+            return;
+          }
+
           try {
             const uploadedUrl = await uploadMediaFile(imageFile, 'categories');
             if (uploadedUrl) {
