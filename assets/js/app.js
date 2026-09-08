@@ -1,6 +1,7 @@
 // Main Application Script (UI Wiring, Search, Cart State, Mobile Nav)
 import { fetchPublishedProducts, subscribeToPublishedProducts, fetchBanners, renderProductCard, renderSkeletonCards, renderErrorState, renderEmptyState, fetchActiveCategories, subscribeToActiveCategories, DEFAULT_CATEGORIES, DEFAULT_BANNERS, getProductShareUrl, FALLBACK_IMAGE } from './products.js';
 import { toggleWishlist, isProductInWishlist, currentUser, logoutUser, onAuthStateUpdate } from './auth.js';
+import { getCategoryAutoIcon } from './category-icons.js';
 import { TRANSLATIONS } from './translations.js';
 import { db, collection, query, where, getDocs, limit } from './firebase-config.js';
 
@@ -694,14 +695,17 @@ async function initApp() {
 
       const renderCategoriesUI = (cats) => {
         if (cats && cats.length > 0) {
-          catGrid.innerHTML = cats.map(cat => `
-            <div class="category-card" onclick="window.location.href='shop.html?category=${cat.id}'">
-              <div class="category-icon-box">
-                ${cat.image ? `<img src="${cat.image}" alt="${cat.name}" loading="lazy" class="category-img">` : `<i class="fas ${cat.icon || 'fa-folder'}"></i>`}
+          catGrid.innerHTML = cats.map(cat => {
+            const catImgSrc = cat.image || getCategoryAutoIcon(cat.name);
+            return `
+              <div class="category-card" onclick="window.location.href='shop.html?category=${cat.id}'">
+                <div class="category-icon-box">
+                  <img src="${catImgSrc}" alt="${cat.name}" loading="lazy" class="category-img">
+                </div>
+                <span class="category-name">${cat.name}</span>
               </div>
-              <span class="category-name">${cat.name}</span>
-            </div>
-          `).join('');
+            `;
+          }).join('');
         } else {
           catGrid.innerHTML = '';
         }
