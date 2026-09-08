@@ -100,6 +100,12 @@ export function generateCategorySlug(name) {
   return (name || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 }
 
+function invalidateCategoryCache() {
+  try {
+    sessionStorage.removeItem('shs_cached_categories');
+  } catch (e) {}
+}
+
 export async function createCategory(categoryData) {
   // Accepts object or positional arguments for backward compatibility
   let name, icon, description, slug, image, isActive;
@@ -137,15 +143,17 @@ export async function createCategory(categoryData) {
 
   // Fetch all existing categories to check duplicate name and duplicate slug
   const allCategories = await fetchCategoriesFromDB();
-  const nameLower = name.toLowerCase();
+  const nameLower = name.toLowerCase().trim();
+  const slugLower = slug.toLowerCase().trim();
+
   const duplicateName = allCategories.find(c => (c.name || '').toLowerCase().trim() === nameLower);
   if (duplicateName) {
-    throw new Error('A category with this name already exists. Please use a unique category name.');
+    throw new Error('এই নামে ইতিমধ্যে একটি ক্যাটাগরি রয়েছে। অনুগ্রহ করে নতুন নাম ব্যবহার করুন। (A category with this name already exists)');
   }
 
-  const duplicateSlug = allCategories.find(c => (c.slug || c.id || '').toLowerCase().trim() === slug);
+  const duplicateSlug = allCategories.find(c => (c.slug || c.id || '').toLowerCase().trim() === slugLower);
   if (duplicateSlug) {
-    throw new Error('This category slug already exists. Please use a unique slug.');
+    throw new Error('এই স্লাগ দিয়ে ইতিমধ্যে একটি ক্যাটাগরি রয়েছে। (This category slug already exists)');
   }
 
   const docId = slug;
@@ -162,6 +170,7 @@ export async function createCategory(categoryData) {
   };
 
   await setDoc(docRef, payload);
+  invalidateCategoryCache();
   return { id: docId, ...payload };
 }
 
@@ -180,15 +189,17 @@ export async function updateCategory(catId, categoryData) {
 
   // Check unique name and slug among other categories
   const allCategories = await fetchCategoriesFromDB();
-  const nameLower = name.toLowerCase();
-  const duplicateName = allCategories.find(c => c.id !== catId && (c.name || '').toLowerCase().trim() === nameLower);
+  const nameLower = name.toLowerCase().trim();
+  const slugLower = slug.toLowerCase().trim();
+
+  const duplicateName = allCategories.find(c => c.id !== catId && c.slug !== catId && (c.name || '').toLowerCase().trim() === nameLower);
   if (duplicateName) {
-    throw new Error('A category with this name already exists on another category.');
+    throw new Error('অন্য একটি ক্যাটাগরিতে এই নাম ব্যবহার করা হয়েছে। (A category with this name already exists)');
   }
 
-  const duplicateSlug = allCategories.find(c => c.id !== catId && (c.slug || c.id || '').toLowerCase().trim() === slug);
+  const duplicateSlug = allCategories.find(c => c.id !== catId && c.slug !== catId && (c.slug || c.id || '').toLowerCase().trim() === slugLower);
   if (duplicateSlug) {
-    throw new Error('This category slug already exists on another category.');
+    throw new Error('অন্য একটি ক্যাটাগরিতে এই স্লাগ ব্যবহার করা হয়েছে। (This category slug already exists)');
   }
 
   const payload = {
@@ -202,6 +213,7 @@ export async function updateCategory(catId, categoryData) {
   };
 
   await updateDoc(doc(db, 'categories', catId), payload);
+  invalidateCategoryCache();
 }
 
 export async function toggleCategoryStatus(catId, currentStatus) {
@@ -209,6 +221,7 @@ export async function toggleCategoryStatus(catId, currentStatus) {
     isActive: !currentStatus,
     updatedAt: new Date()
   });
+  invalidateCategoryCache();
 }
 
 // -------------------------------------------------------------
@@ -244,6 +257,7 @@ export async function fetchCategoriesFromDB() {
 
 export async function deleteCategoryFromDB(catId) {
   await deleteDoc(doc(db, 'categories', catId));
+  invalidateCategoryCache();
 }
 
 // -------------------------------------------------------------
