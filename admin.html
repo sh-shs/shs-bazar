@@ -1473,6 +1473,9 @@
         showToast('Product Saved Successfully!');
         window.closeModal('modal-product');
         await loadProductsData();
+        renderProductsTable();
+        renderInventoryTable();
+        updateDashboardMetrics();
       } catch (err) {
         console.error('Save product error:', err);
         showToast('Failed to save product');
@@ -1667,7 +1670,10 @@
           }
 
           await deleteCategoryFromDB(id);
+          adminState.categories = adminState.categories.filter(x => x.id !== id && x.slug !== id);
           showToast(assignedProducts.length > 0 ? `Category deleted & ${assignedProducts.length} product(s) moved to Uncategorized.` : 'Category deleted successfully.');
+          renderCategoriesTable();
+          populateCategoryDropdowns();
           await loadProductsData();
           await loadCategoriesData();
         } catch (err) {
@@ -1734,6 +1740,8 @@
 
         window.closeModal('modal-category');
         await loadCategoriesData();
+        renderCategoriesTable();
+        populateCategoryDropdowns();
       } catch (err) {
         console.error('Save category error:', err);
         showToast(err.message || 'Failed to save category');
@@ -2183,12 +2191,27 @@
       e.preventDefault();
       const submitBtn = document.getElementById('cpn-submit-btn');
       const id = document.getElementById('cpn-id').value;
-      const code = document.getElementById('cpn-code').value;
+      const code = (document.getElementById('cpn-code').value || '').trim();
       const discountType = document.querySelector('input[name="cpn_discount_type"]:checked')?.value || 'percentage';
       const percent = document.getElementById('cpn-percent').value;
       const flat = document.getElementById('cpn-flat').value;
       const min = document.getElementById('cpn-min').value;
       const isActive = document.getElementById('cpn-active').checked;
+
+      if (!code) {
+        showToast('Coupon code is required.');
+        return;
+      }
+
+      if (discountType === 'percentage' && (!percent || Number(percent) <= 0 || Number(percent) > 100)) {
+        showToast('Discount percentage must be between 1 and 100.');
+        return;
+      }
+
+      if (discountType === 'flat' && (!flat || Number(flat) <= 0)) {
+        showToast('Flat discount amount must be greater than 0.');
+        return;
+      }
 
       submitBtn.disabled = true;
       submitBtn.textContent = 'Saving...';
@@ -2213,6 +2236,7 @@
 
         window.closeModal('modal-coupon');
         await loadCouponsData();
+        renderCouponsTable();
       } catch (err) {
         console.error('Save coupon error:', err);
         showToast(err.message || 'Failed to save coupon');
