@@ -193,7 +193,7 @@ export function renderSkeletonCards(count = 4) {
 }
 
 export function renderErrorState(message, retryCallbackName) {
-  const lang = localStorage.getItem('shs_lang') || 'bn';
+  const lang = localStorage.getItem('shs_lang') || 'en';
   const retryText = lang === 'bn' ? 'পুনরায় চেষ্টা করুন' : 'Try Again';
   const defaultMsg = lang === 'bn'
     ? 'প্রোডাক্ট লোড করতে সমস্যা হয়েছে। অনুগ্রহ করে আপনার নেটওয়ার্ক চেক করে আবার চেষ্টা করুন।'
@@ -213,7 +213,7 @@ export function renderErrorState(message, retryCallbackName) {
 }
 
 export function renderEmptyState(message) {
-  const lang = localStorage.getItem('shs_lang') || 'bn';
+  const lang = localStorage.getItem('shs_lang') || 'en';
   const defaultMsg = lang === 'bn' ? 'কোনো প্রোডাক্ট পাওয়া যায়নি' : 'No products found';
 
   return `
@@ -333,7 +333,7 @@ export function renderProductCard(product) {
   const imageSrc = getOptimizedImageUrl(rawImage, 300);
   const sellerId = product.sellerId || 'admin';
 
-  const lang = localStorage.getItem('shs_lang') || 'bn';
+  const lang = localStorage.getItem('shs_lang') || 'en';
   const addToCartText = lang === 'bn' ? 'কার্টে যোগ করুন' : 'Add to Cart';
   const stockOutText = lang === 'bn' ? 'স্টক আউট' : 'Stock Out';
 

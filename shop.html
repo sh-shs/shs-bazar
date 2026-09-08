@@ -145,9 +145,9 @@
 
             renderShopGrid();
           } else {
-            const lang = getCurrentLang ? getCurrentLang() : 'bn';
+            const lang = getCurrentLang ? getCurrentLang() : 'en';
             const dict = TRANSLATIONS || TRANSLATIONS_FILE;
-            const t = dict ? (dict[lang] || dict.bn) : {};
+            const t = dict ? (dict[lang] || dict.en) : {};
             grid.innerHTML = renderEmptyState(t.noProductsFound || 'কোনো প্রোডাক্ট পাওয়া যায়নি');
             if (loadMoreContainer) loadMoreContainer.style.display = 'none';
           }
@@ -155,9 +155,9 @@
       } catch (err) {
         console.error('[initShopPage Error]:', err);
         if (grid) {
-          const lang = getCurrentLang ? getCurrentLang() : 'bn';
+          const lang = getCurrentLang ? getCurrentLang() : 'en';
           const dict = TRANSLATIONS || TRANSLATIONS_FILE;
-          const t = dict ? (dict[lang] || dict.bn) : {};
+          const t = dict ? (dict[lang] || dict.en) : {};
           grid.innerHTML = renderErrorState(t.errorLoadingProducts, 'window.retryInitShopPage()');
         }
       }
