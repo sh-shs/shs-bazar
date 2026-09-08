@@ -735,7 +735,7 @@
     } from './assets/js/admin.js';
     import { onAuthStateUpdate, SUPER_ADMIN_EMAIL } from './assets/js/auth.js';
     import { showToast } from './assets/js/app.js';
-    import { db, collection, getDocs, doc, deleteDoc } from './assets/js/firebase-config.js';
+    import { db, collection, getDocs, doc, deleteDoc, updateDoc } from './assets/js/firebase-config.js';
     import { generatePDFInvoice } from './assets/js/invoice.js';
     import { FALLBACK_IMAGE } from './assets/js/products.js';
 
@@ -1641,18 +1641,37 @@
       const catName = c ? c.name : id;
 
       // Safe deletion check: Check if products belong to this category
-      const assignedProducts = adminState.products.filter(p => p.category === id || p.category === c?.slug || (p.category && p.category.toLowerCase() === (catName || '').toLowerCase()));
+      const assignedProducts = adminState.products.filter(p =>
+        p.category === id ||
+        p.category === c?.slug ||
+        (p.category && p.category.toLowerCase().trim() === (catName || '').toLowerCase().trim())
+      );
+
+      let confirmMsg = `আপনি কি নিশ্চিত যে '${catName}' ক্যাটাগরি ডিলিট করতে চান? (Are you sure you want to delete category "${catName}"?)`;
       if (assignedProducts.length > 0) {
-        alert(`This category contains ${assignedProducts.length} product(s). Please move or remove those products before deleting.`);
-        return;
+        confirmMsg = `এই ক্যাটাগরিতে ${assignedProducts.length}টি প্রোডাক্ট সংযুক্ত রয়েছে। ক্যাটাগরি মুছে ফেললে এই প্রোডাক্টগুলো 'uncategorized' এ স্থানান্তরিত হবে।\n\nআপনি কি নিশ্চিত যে '${catName}' ক্যাটাগরি ডিলিট করতে চান?`;
       }
 
-      if (confirm(`Are you sure you want to delete this category ("${catName}")?`)) {
+      if (confirm(confirmMsg)) {
         try {
+          if (assignedProducts.length > 0) {
+            // Reassign assigned products to uncategorized
+            const reassignPromises = assignedProducts.map(p =>
+              updateDoc(doc(db, 'products', p.id), {
+                category: 'uncategorized',
+                subCategory: '',
+                updatedAt: new Date()
+              })
+            );
+            await Promise.all(reassignPromises);
+          }
+
           await deleteCategoryFromDB(id);
-          showToast('Category deleted successfully.');
+          showToast(assignedProducts.length > 0 ? `Category deleted & ${assignedProducts.length} product(s) moved to Uncategorized.` : 'Category deleted successfully.');
+          await loadProductsData();
           await loadCategoriesData();
         } catch (err) {
+          console.error('Delete category error:', err);
           showToast(err.message || 'Failed to delete category');
         }
       }

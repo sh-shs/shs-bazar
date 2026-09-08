@@ -21,35 +21,51 @@ export const DEFAULT_CATEGORIES = [];
 
 let cachedCategories = null;
 
-export async function fetchActiveCategories() {
-  if (cachedCategories && Array.isArray(cachedCategories)) {
+export function clearCategoryCache() {
+  cachedCategories = null;
+  try {
+    sessionStorage.removeItem('shs_cached_categories');
+  } catch (e) {}
+}
+
+export async function fetchActiveCategories(forceRefresh = false) {
+  if (!forceRefresh && cachedCategories && Array.isArray(cachedCategories)) {
     return cachedCategories;
   }
-  try {
-    const sessionData = sessionStorage.getItem('shs_cached_categories');
-    if (sessionData) {
-      cachedCategories = JSON.parse(sessionData);
-      if (Array.isArray(cachedCategories)) {
-        return cachedCategories;
+  if (!forceRefresh) {
+    try {
+      const sessionData = sessionStorage.getItem('shs_cached_categories');
+      if (sessionData) {
+        cachedCategories = JSON.parse(sessionData);
+        if (Array.isArray(cachedCategories)) {
+          return cachedCategories;
+        }
       }
+    } catch (e) {
+      console.warn('sessionStorage categories read error:', e);
     }
-  } catch (e) {
-    console.warn('sessionStorage categories read error:', e);
   }
 
   try {
     const snap = await getDocs(collection(db, 'categories'));
     const list = [];
+    const seenKeys = new Set();
     snap.forEach(docSnap => {
       const data = docSnap.data();
       if (data.isActive !== false) {
-        list.push({
-          id: data.slug || docSnap.id,
-          name: data.name,
-          icon: data.icon || 'fa-folder',
-          image: data.image || '',
-          ...data
-        });
+        const catId = data.slug || docSnap.id;
+        const normKey = (catId || '').toLowerCase().trim();
+        if (!seenKeys.has(normKey)) {
+          seenKeys.add(normKey);
+          list.push({
+            id: catId,
+            name: data.name,
+            icon: data.icon || 'fa-folder',
+            image: data.image || '',
+            docId: docSnap.id,
+            ...data
+          });
+        }
       }
     });
 
@@ -63,6 +79,54 @@ export async function fetchActiveCategories() {
   }
   cachedCategories = DEFAULT_CATEGORIES;
   return DEFAULT_CATEGORIES;
+}
+
+/**
+ * Realtime subscription listener for active categories.
+ */
+export function subscribeToActiveCategories(onData, onError) {
+  try {
+    const q = collection(db, 'categories');
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const list = [];
+        const seenKeys = new Set();
+        snapshot.forEach(docSnap => {
+          const data = docSnap.data();
+          if (data.isActive !== false) {
+            const catId = data.slug || docSnap.id;
+            const normKey = (catId || '').toLowerCase().trim();
+            if (!seenKeys.has(normKey)) {
+              seenKeys.add(normKey);
+              list.push({
+                id: catId,
+                name: data.name,
+                icon: data.icon || 'fa-folder',
+                image: data.image || '',
+                docId: docSnap.id,
+                ...data
+              });
+            }
+          }
+        });
+        cachedCategories = list;
+        try {
+          sessionStorage.setItem('shs_cached_categories', JSON.stringify(list));
+        } catch (e) {}
+        if (typeof onData === 'function') onData(list);
+      },
+      (error) => {
+        console.error('[subscribeToActiveCategories] Listener error:', error);
+        if (typeof onError === 'function') onError(error);
+      }
+    );
+    return unsubscribe;
+  } catch (err) {
+    console.error('[subscribeToActiveCategories] Setup error:', err);
+    if (typeof onError === 'function') onError(err);
+    return () => {};
+  }
 }
 
 let cachedPublishedProducts = null;

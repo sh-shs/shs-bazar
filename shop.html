@@ -63,7 +63,7 @@
   <script type="module" src="assets/js/products.js"></script>
   <script type="module" src="assets/js/app.js"></script>
   <script type="module">
-    import { fetchPublishedProducts, renderProductCard, renderSkeletonCards, renderErrorState, renderEmptyState, fetchActiveCategories } from './assets/js/products.js';
+    import { fetchPublishedProducts, renderProductCard, renderSkeletonCards, renderErrorState, renderEmptyState, fetchActiveCategories, subscribeToActiveCategories } from './assets/js/products.js';
     import { initSearch, getCurrentLang, TRANSLATIONS } from './assets/js/app.js';
     import { TRANSLATIONS as TRANSLATIONS_FILE } from './assets/js/translations.js';
 
@@ -94,10 +94,11 @@
 
         // Filter tabs
         const filterBar = document.getElementById('category-filter-bar');
-        if (filterBar) {
-          if (activeCategories && activeCategories.length > 0) {
+        const renderFilterBar = (cats) => {
+          if (!filterBar) return;
+          if (cats && cats.length > 0) {
             filterBar.innerHTML = `<button class="btn-outline ${!selectedCategory ? 'btn-primary' : ''}" onclick="window.location.href='shop.html'" style="padding: 4px 12px; font-size: 0.8rem; white-space: nowrap;">All</button>` +
-              activeCategories.map(c => `
+              cats.map(c => `
                 <button class="btn-outline ${selectedCategory === c.id ? 'btn-primary' : ''}"
                   onclick="window.location.href='shop.html?category=${c.id}'"
                   style="padding: 4px 12px; font-size: 0.8rem; white-space: nowrap;">
@@ -107,7 +108,20 @@
           } else {
             filterBar.innerHTML = '';
           }
-        }
+        };
+
+        renderFilterBar(activeCategories);
+
+        const unsubscribeShopCategories = subscribeToActiveCategories(
+          (updatedCats) => {
+            renderFilterBar(updatedCats);
+          },
+          (err) => console.warn('[Shop Categories Realtime Error]:', err)
+        );
+
+        window.addEventListener('beforeunload', () => {
+          if (typeof unsubscribeShopCategories === 'function') unsubscribeShopCategories();
+        });
 
         let displayed = products;
         if (selectedCategory) {
