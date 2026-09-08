@@ -17,6 +17,7 @@ import {
   getDownloadURL
 } from './firebase-config.js';
 import { SUPER_ADMIN_EMAILS, SUPER_ADMIN_EMAIL, currentUser, userProfile } from './auth.js';
+import { clearCategoryCache } from './products.js';
 
 export function isSuperAdminUser(user, profile) {
   if (!user) return false;
@@ -102,7 +103,7 @@ export function generateCategorySlug(name) {
 
 function invalidateCategoryCache() {
   try {
-    sessionStorage.removeItem('shs_cached_categories');
+    clearCategoryCache();
   } catch (e) {}
 }
 
