@@ -697,7 +697,7 @@ async function initApp() {
           catGrid.innerHTML = cats.map(cat => `
             <div class="category-card" onclick="window.location.href='shop.html?category=${cat.id}'">
               <div class="category-icon-box">
-                ${cat.image ? `<img src="${cat.image}" alt="${cat.name}" loading="lazy" class="category-img">` : `<i class="fas ${cat.icon || 'fa-folder'}"></i>`}
+                ${cat.image ? `<img src="${cat.image}" alt="${cat.name}" loading="lazy" class="category-img" onerror="this.outerHTML='<i class=\\'fas ${cat.icon || 'fa-folder'}\\'></i>';">` : `<i class="fas ${cat.icon || 'fa-folder'}"></i>`}
               </div>
               <span class="category-name">${cat.name}</span>
             </div>
