@@ -93,8 +93,9 @@
         const contentEl = document.getElementById('login-page-content');
 
         if (user) {
-          // If already logged in, navigate straight to profile/admin without showing login form
-          const target = profile && profile.role === 'admin' ? 'admin.html' : 'profile.html';
+          // If already logged in, navigate straight to target or profile/admin
+          const redirectParam = new URLSearchParams(window.location.search).get('redirect');
+          const target = redirectParam || (profile && profile.role === 'admin' ? 'admin.html' : 'profile.html');
           window.location.replace(target);
           return;
         }
@@ -136,7 +137,8 @@
         try {
           await loginWithGoogle();
           showToast('Signed in with Google!');
-          window.location.href = 'index.html';
+          const redirectParam = new URLSearchParams(window.location.search).get('redirect');
+          window.location.href = redirectParam || 'index.html';
         } catch (err) {
           showToast(err.message || 'Google Sign-in failed');
         }
@@ -167,7 +169,8 @@
             await loginWithEmail(email, pass);
             showToast('Welcome back!');
           }
-          window.location.href = 'index.html';
+          const redirectParam = new URLSearchParams(window.location.search).get('redirect');
+          window.location.href = redirectParam || 'index.html';
         } catch (err) {
           showToast(err.message || 'Authentication error');
         } finally {

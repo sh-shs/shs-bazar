@@ -19,11 +19,6 @@ service cloud.firestore {
       );
     }
 
-    // Helper function to check if user is approved seller
-    function isApprovedSeller() {
-      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.sellerStatus == 'approved';
-    }
-
     // Users collection
     match /users/{userId} {
       allow read: if isSignedIn();
@@ -52,8 +47,7 @@ service cloud.firestore {
     // Products collection
     match /products/{productId} {
       allow read: if true;
-      allow create: if isApprovedSeller() || isSuperAdmin();
-      allow update, delete: if isSuperAdmin() || (isApprovedSeller() && resource.data.sellerId == request.auth.uid);
+      allow write: if isSuperAdmin();
     }
 
     // Categories collection
@@ -66,11 +60,10 @@ service cloud.firestore {
     match /orders/{orderId} {
       allow read: if isSignedIn() && (
         resource.data.userId == request.auth.uid ||
-        isSuperAdmin() ||
-        (isApprovedSeller() && resource.data.sellerIds.hasAny([request.auth.uid]))
+        isSuperAdmin()
       );
-      allow create: if true; // Public checkout allowed
-      allow update: if isSuperAdmin() || (isApprovedSeller() && resource.data.sellerIds.hasAny([request.auth.uid]));
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isSuperAdmin();
       allow delete: if isSuperAdmin();
     }
 
