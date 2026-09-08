@@ -1350,7 +1350,9 @@
       document.getElementById('modal-product-title').innerHTML = '<i class="fas fa-edit"></i> Edit Product';
       document.getElementById('adm-p-id').value = p.id;
       document.getElementById('adm-p-name').value = p.name || '';
-      document.getElementById('adm-p-category').value = p.category || 'electronics';
+      const catSelect = document.getElementById('adm-p-category');
+      const hasCatOption = Array.from(catSelect.options).some(opt => opt.value === p.category);
+      catSelect.value = hasCatOption ? p.category : '';
       document.getElementById('adm-p-subcategory').value = p.subCategory || '';
       document.getElementById('adm-p-brand').value = p.brand || '';
       document.getElementById('adm-p-sku').value = p.sku || '';
@@ -1499,37 +1501,20 @@
       const filterSelect = document.getElementById('prod-category-filter');
       if (!select) return;
 
-      const defaultCats = [
-        { id: 'electronics', name: 'Electronics' },
-        { id: 'fashion', name: 'Fashion' },
-        { id: 'home-living', name: 'Home & Living' },
-        { id: 'kitchen', name: 'Kitchen' },
-        { id: 'beauty', name: 'Beauty' },
-        { id: 'health', name: 'Health' },
-        { id: 'baby-care', name: 'Baby Care' },
-        { id: 'sports', name: 'Sports' },
-        { id: 'lighting', name: 'Lighting' },
-        { id: 'gadgets', name: 'Gadgets' }
-      ];
-
-      // Active categories from DB take priority
+      // Active categories strictly from DB
       const dbActiveCats = (adminState.categories || []).filter(c => c.isActive !== false).map(c => ({
         id: c.slug || c.id,
         name: c.name
       }));
 
-      const combined = dbActiveCats.length > 0 ? [...dbActiveCats] : [...defaultCats];
       if (dbActiveCats.length > 0) {
-        defaultCats.forEach(c => {
-          if (!combined.some(x => x.id === c.id || x.name.toLowerCase() === c.name.toLowerCase())) {
-            combined.push(c);
-          }
-        });
+        select.innerHTML = '<option value="">Select Category</option>' + dbActiveCats.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+      } else {
+        select.innerHTML = '<option value="">No categories available - Add Category first</option>';
       }
 
-      select.innerHTML = combined.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
       if (filterSelect) {
-        filterSelect.innerHTML = '<option value="all">All Categories</option>' + combined.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+        filterSelect.innerHTML = '<option value="all">All Categories</option>' + (dbActiveCats.length > 0 ? dbActiveCats.map(c => `<option value="${c.id}">${c.name}</option>`).join('') : '');
       }
     }
 
