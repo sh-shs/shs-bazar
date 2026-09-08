@@ -687,15 +687,10 @@ async function initApp() {
   // If on homepage, render catalog sections
   const trendingGrid = document.getElementById('trending-products');
   if (trendingGrid) {
-    // 1. Render default categories and initial banner immediately (non-blocking)
+    // 1. Render categories from Firestore without hardcoded defaults
     const catGrid = document.getElementById('category-grid');
     if (catGrid) {
-      catGrid.innerHTML = DEFAULT_CATEGORIES.map(cat => `
-        <div class="category-card" onclick="window.location.href='shop.html?category=${cat.id}'">
-          <div class="category-icon-box"><i class="fas ${cat.icon}"></i></div>
-          <span class="category-name">${cat.name}</span>
-        </div>
-      `).join('');
+      catGrid.innerHTML = '';
 
       fetchActiveCategories().then(cats => {
         if (cats && cats.length > 0) {
@@ -707,6 +702,8 @@ async function initApp() {
               <span class="category-name">${cat.name}</span>
             </div>
           `).join('');
+        } else {
+          catGrid.innerHTML = '';
         }
       }).catch(err => console.warn('Error loading active categories:', err));
     }

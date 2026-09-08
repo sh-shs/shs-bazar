@@ -16,31 +16,22 @@ export function getOptimizedImageUrl(url, width = 300, quality = 'auto') {
   return url;
 }
 
-// Fallback initial categories array as defined in requirement
-export const DEFAULT_CATEGORIES = [
-  { id: 'electronics', name: 'Electronics', icon: 'fa-laptop' },
-  { id: 'fashion', name: 'Fashion', icon: 'fa-tshirt' },
-  { id: 'home-living', name: 'Home & Living', icon: 'fa-couch' },
-  { id: 'kitchen', name: 'Kitchen', icon: 'fa-utensils' },
-  { id: 'beauty', name: 'Beauty', icon: 'fa-pump-soap' },
-  { id: 'health', name: 'Health', icon: 'fa-heartbeat' },
-  { id: 'baby-care', name: 'Baby Care', icon: 'fa-baby' },
-  { id: 'sports', name: 'Sports', icon: 'fa-football-ball' },
-  { id: 'lighting', name: 'Lighting', icon: 'fa-lightbulb' },
-  { id: 'gadgets', name: 'Gadgets', icon: 'fa-mobile-alt' }
-];
+// Fallback initial categories array as defined in requirement (Empty by default)
+export const DEFAULT_CATEGORIES = [];
 
 let cachedCategories = null;
 
 export async function fetchActiveCategories() {
-  if (cachedCategories && cachedCategories.length > 0) {
+  if (cachedCategories && Array.isArray(cachedCategories)) {
     return cachedCategories;
   }
   try {
     const sessionData = sessionStorage.getItem('shs_cached_categories');
     if (sessionData) {
       cachedCategories = JSON.parse(sessionData);
-      return cachedCategories;
+      if (Array.isArray(cachedCategories)) {
+        return cachedCategories;
+      }
     }
   } catch (e) {
     console.warn('sessionStorage categories read error:', e);
@@ -62,15 +53,13 @@ export async function fetchActiveCategories() {
       }
     });
 
-    if (list.length > 0) {
-      cachedCategories = list;
-      try {
-        sessionStorage.setItem('shs_cached_categories', JSON.stringify(list));
-      } catch (e) {}
-      return list;
-    }
+    cachedCategories = list;
+    try {
+      sessionStorage.setItem('shs_cached_categories', JSON.stringify(list));
+    } catch (e) {}
+    return list;
   } catch (err) {
-    console.warn('Error fetching categories from Firestore, using default categories:', err);
+    console.warn('Error fetching categories from Firestore:', err);
   }
   cachedCategories = DEFAULT_CATEGORIES;
   return DEFAULT_CATEGORIES;

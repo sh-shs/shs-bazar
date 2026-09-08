@@ -95,14 +95,18 @@
         // Filter tabs
         const filterBar = document.getElementById('category-filter-bar');
         if (filterBar) {
-          filterBar.innerHTML = `<button class="btn-outline ${!selectedCategory ? 'btn-primary' : ''}" onclick="window.location.href='shop.html'" style="padding: 4px 12px; font-size: 0.8rem; white-space: nowrap;">All</button>` +
-            activeCategories.map(c => `
-              <button class="btn-outline ${selectedCategory === c.id ? 'btn-primary' : ''}"
-                onclick="window.location.href='shop.html?category=${c.id}'"
-                style="padding: 4px 12px; font-size: 0.8rem; white-space: nowrap;">
-                ${c.name}
-              </button>
-            `).join('');
+          if (activeCategories && activeCategories.length > 0) {
+            filterBar.innerHTML = `<button class="btn-outline ${!selectedCategory ? 'btn-primary' : ''}" onclick="window.location.href='shop.html'" style="padding: 4px 12px; font-size: 0.8rem; white-space: nowrap;">All</button>` +
+              activeCategories.map(c => `
+                <button class="btn-outline ${selectedCategory === c.id ? 'btn-primary' : ''}"
+                  onclick="window.location.href='shop.html?category=${c.id}'"
+                  style="padding: 4px 12px; font-size: 0.8rem; white-space: nowrap;">
+                  ${c.name}
+                </button>
+              `).join('');
+          } else {
+            filterBar.innerHTML = '';
+          }
         }
 
         let displayed = products;
