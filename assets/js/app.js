@@ -7,11 +7,11 @@ import { db, collection, query, where, getDocs, limit } from './firebase-config.
 export { TRANSLATIONS };
 
 export function getCurrentLang() {
-  return localStorage.getItem('shs_lang') || 'bn';
+  return localStorage.getItem('shs_lang') || 'en';
 }
 
 export function setLanguage(lang) {
-  const targetLang = (lang === 'en' || lang === 'bn') ? lang : 'bn';
+  const targetLang = (lang === 'en' || lang === 'bn') ? lang : 'en';
   localStorage.setItem('shs_lang', targetLang);
   applyTranslations();
   showToast(targetLang === 'bn' ? 'ভাষা: বাংলা সিলেক্ট করা হয়েছে' : 'Language: English selected');
@@ -24,7 +24,7 @@ export function toggleLanguage(lang) {
 
 export function applyTranslations() {
   const lang = getCurrentLang();
-  const t = TRANSLATIONS[lang] || TRANSLATIONS.bn;
+  const t = TRANSLATIONS[lang] || TRANSLATIONS.en;
 
   // 1. Text Content
   document.querySelectorAll('[data-i18n]').forEach(el => {
@@ -68,7 +68,7 @@ window.toggleLanguage = toggleLanguage;
 // Theme Logic
 export function initTheme() {
   const savedTheme = localStorage.getItem('shs_theme');
-  if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+  if (savedTheme === 'dark') {
     document.body.classList.add('dark-mode');
     document.documentElement.setAttribute('data-theme', 'dark');
   } else {
@@ -251,7 +251,7 @@ export function renderDrawer() {
   }
 
   const lang = getCurrentLang();
-  const t = TRANSLATIONS[lang] || TRANSLATIONS.bn;
+  const t = TRANSLATIONS[lang] || TRANSLATIONS.en;
   const isDark = document.body.classList.contains('dark-mode');
   const isLoggedIn = !!currentUser;
   const currentPath = window.location.pathname.split('/').pop() || 'index.html';
@@ -734,7 +734,7 @@ async function initApp() {
     const renderHomepageProductsUI = (products) => {
       initSearch(products);
       const lang = getCurrentLang();
-      const t = TRANSLATIONS[lang] || TRANSLATIONS.bn;
+      const t = TRANSLATIONS[lang] || TRANSLATIONS.en;
 
       // Trending Grid
       const trendingProducts = products.filter(p => p.isTrending);
@@ -804,7 +804,7 @@ async function initApp() {
       } catch (err) {
         console.error('[loadHomepageProducts Error]:', err);
         const lang = getCurrentLang();
-        const t = TRANSLATIONS[lang] || TRANSLATIONS.bn;
+        const t = TRANSLATIONS[lang] || TRANSLATIONS.en;
         const errorHtml = renderErrorState(t.errorLoadingProducts, 'window.retryFetchHomepageProducts()');
         trendingGrid.innerHTML = errorHtml;
         if (allProductsGrid) {
