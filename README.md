@@ -14,7 +14,7 @@
 - **Primary Color**: Deep Green (`#0B4D3C`)
 - **Accent Color**: Orange (`#F5820A`)
 - **Background**: Light Gray / White (`#F4F6F8` / `#FFFFFF`)
-- **Tagline**: `"OFFER OFFER OFFER"`
+- **Tagline**: `"কুষ্টিয়ার সেরা অনলাইন শপিং গন্তব্য"`
 
 ---
 

@@ -147,7 +147,13 @@
 
       const filtered = activeFilter === 'all'
         ? allOrders
-        : allOrders.filter(o => (o.orderStatus || 'Pending').toLowerCase() === activeFilter);
+        : allOrders.filter(o => {
+            const status = (o.orderStatus || 'Pending').toLowerCase();
+            if (activeFilter === 'processing') {
+              return ['processing', 'confirmed', 'packed', 'out for delivery'].includes(status);
+            }
+            return status === activeFilter;
+          });
 
       if (filtered.length === 0) {
         container.innerHTML = `

@@ -796,9 +796,16 @@
             showToast('অর্ডার সফলভাবে সম্পূর্ণ হয়েছে!');
             window.location.href = `order-success.html?orderId=${orderId}`;
           } catch (err) {
-            showToast('অর্ডার জমা করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।');
-            submitBtn.disabled = false;
-            submitBtn.textContent = '✅ Place Order Now';
+            const errorMsg = err.message || 'অর্ডার জমা করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।';
+            showToast(errorMsg);
+            if (!currentUser) {
+              setTimeout(() => {
+                window.location.href = 'login.html?redirect=checkout.html';
+              }, 1500);
+            } else {
+              submitBtn.disabled = false;
+              submitBtn.textContent = '✅ Place Order Now';
+            }
           }
         });
       }

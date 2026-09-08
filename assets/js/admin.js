@@ -572,10 +572,16 @@ export async function toggleCouponStatus(couponId, currentStatus) {
 export async function addBanner(title, subtitle, imageFile, linkTo = 'shop.html') {
   let imageUrl = 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=1200&q=80';
   if (imageFile) {
-    const fileName = `banners/${Date.now()}_${imageFile.name}`;
-    const storageRef = ref(storage, fileName);
-    const snap = await uploadBytesResumable(storageRef, imageFile);
-    imageUrl = await getDownloadURL(snap.ref);
+    try {
+      const uploadedUrl = await uploadMediaFile(imageFile, 'banners');
+      if (uploadedUrl) imageUrl = uploadedUrl;
+    } catch (e) {
+      console.warn('Banner upload via Cloudinary failed, falling back to Firebase storage:', e);
+      const fileName = `banners/${Date.now()}_${imageFile.name}`;
+      const storageRef = ref(storage, fileName);
+      const snap = await uploadBytesResumable(storageRef, imageFile);
+      imageUrl = await getDownloadURL(snap.ref);
+    }
   }
   await addDoc(collection(db, 'banners'), {
     title: title.trim(),
@@ -590,10 +596,16 @@ export async function addBanner(title, subtitle, imageFile, linkTo = 'shop.html'
 export async function updateBanner(bannerId, data, newImageFile = null) {
   let updatePayload = { ...data, updatedAt: new Date() };
   if (newImageFile) {
-    const fileName = `banners/${Date.now()}_${newImageFile.name}`;
-    const storageRef = ref(storage, fileName);
-    const snap = await uploadBytesResumable(storageRef, newImageFile);
-    updatePayload.image = await getDownloadURL(snap.ref);
+    try {
+      const uploadedUrl = await uploadMediaFile(newImageFile, 'banners');
+      if (uploadedUrl) updatePayload.image = uploadedUrl;
+    } catch (e) {
+      console.warn('Banner upload via Cloudinary failed, falling back to Firebase storage:', e);
+      const fileName = `banners/${Date.now()}_${newImageFile.name}`;
+      const storageRef = ref(storage, fileName);
+      const snap = await uploadBytesResumable(storageRef, newImageFile);
+      updatePayload.image = await getDownloadURL(snap.ref);
+    }
   }
   await updateDoc(doc(db, 'banners', bannerId), updatePayload);
 }
