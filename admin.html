@@ -1575,8 +1575,9 @@
               ${filtered.map(c => {
                 const prodCount = adminState.products.filter(p => p.category === c.id || p.category === c.slug || (p.category && p.category.toLowerCase() === (c.name || '').toLowerCase())).length;
                 const activeState = c.isActive !== false;
-                const catImgSrc = c.image || getCategoryAutoIcon(c.name);
-                const imageContent = `<img src="${catImgSrc}" style="width:40px; height:40px; object-fit:cover; border-radius:50%; border:1.5px solid var(--primary-color, #0B4D3C);">`;
+                const catImgSrc = (c.image && c.image.trim()) ? c.image.trim() : getCategoryAutoIcon(c.name);
+                const safeCatName = (c.name || 'Category').replace(/"/g, '&quot;');
+                const imageContent = `<img src="${catImgSrc}" alt="${safeCatName}" style="width:40px; height:40px; object-fit:cover; border-radius:50%; border:1.5px solid var(--primary-color, #0B4D3C);">`;
 
                 return `
                   <tr>
