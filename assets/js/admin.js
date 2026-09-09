@@ -18,7 +18,7 @@ import {
 } from './firebase-config.js';
 import { SUPER_ADMIN_EMAILS, SUPER_ADMIN_EMAIL, currentUser, userProfile } from './auth.js';
 import { clearCategoryCache } from './products.js';
-import { getCategoryAutoIcon } from './category-icons.js';
+import { getCategoryAutoIcon, getValidCategoryImageUrl } from './category-icons.js';
 
 export function isSuperAdminUser(user, profile) {
   if (!user) return false;
@@ -161,10 +161,7 @@ export async function createCategory(categoryData) {
   const docId = slug;
   const docRef = doc(db, 'categories', docId);
 
-  let finalImage = (image || '').trim();
-  if (!finalImage) {
-    finalImage = getCategoryAutoIcon(name);
-  }
+  let finalImage = getValidCategoryImageUrl(image, name);
 
   const payload = {
     name,
@@ -209,10 +206,7 @@ export async function updateCategory(catId, categoryData) {
     throw new Error('অন্য একটি ক্যাটাগরিতে এই স্লাগ ব্যবহার করা হয়েছে। (This category slug already exists)');
   }
 
-  let finalImage = (categoryData.image || '').trim();
-  if (!finalImage) {
-    finalImage = getCategoryAutoIcon(name);
-  }
+  let finalImage = getValidCategoryImageUrl(categoryData.image, name);
 
   const payload = {
     name,
