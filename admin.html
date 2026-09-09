@@ -1575,7 +1575,7 @@
               ${filtered.map(c => {
                 const prodCount = adminState.products.filter(p => p.category === c.id || p.category === c.slug || (p.category && p.category.toLowerCase() === (c.name || '').toLowerCase())).length;
                 const activeState = c.isActive !== false;
-                const catImgSrc = getValidCategoryImageUrl(c.image, c.name);
+                const catImgSrc = getValidCategoryImageUrl(c.image, c.name, c.slug || c.id);
                 const safeCatName = (c.name || 'Category').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
                 const imageContent = `<img src="${catImgSrc}" alt="${safeCatName}" style="width:40px; height:40px; object-fit:cover; border-radius:50%; border:1.5px solid var(--primary-color, #0B4D3C);">`;
 
@@ -1614,6 +1614,7 @@
     // Live update preview for category form
     window.updateCategoryPreview = () => {
       const catName = document.getElementById('cat-name')?.value?.trim() || '';
+      const catSlug = document.getElementById('cat-slug')?.value?.trim() || '';
       const imageUrlInput = document.getElementById('cat-image');
       const imageFileInput = document.getElementById('cat-image-file');
       const previewImg = document.getElementById('cat-image-preview');
@@ -1632,15 +1633,15 @@
           if (previewType) previewType.textContent = 'Uploaded Local File';
           if (previewNote) previewNote.textContent = file.name;
         } catch (e) {
-          previewImg.src = getValidCategoryImageUrl('', catName);
+          previewImg.src = getValidCategoryImageUrl('', catName, catSlug);
         }
       } else if (urlVal) {
-        const validUrl = getValidCategoryImageUrl(urlVal, catName);
+        const validUrl = getValidCategoryImageUrl(urlVal, catName, catSlug);
         previewImg.src = validUrl;
         if (previewType) previewType.textContent = validUrl === urlVal ? 'Manual Image URL' : 'Auto Fallback Icon';
         if (previewNote) previewNote.textContent = validUrl === urlVal ? 'Custom provided image URL' : 'Provided URL was invalid or malformed';
       } else {
-        const autoIcon = getValidCategoryImageUrl('', catName);
+        const autoIcon = getValidCategoryImageUrl('', catName, catSlug);
         previewImg.src = autoIcon;
         if (previewType) previewType.textContent = 'Auto Fallback Icon';
         if (previewNote) previewNote.textContent = catName ? `Matched for "${catName}"` : 'Default generic category icon';
@@ -1828,7 +1829,7 @@
         }
 
         if (!imageFile) {
-          image = getValidCategoryImageUrl(image, name);
+          image = getValidCategoryImageUrl(image, name, slug);
         }
 
         const categoryPayload = {

@@ -513,6 +513,34 @@ export const CATEGORY_ICON_SVGS = {
   `)
 };
 
+// Exact hardcoded slug-to-icon key mapping dictionary
+export const SLUG_TO_ICON_KEY_MAP = {
+  "bags-luggage": "bags",
+  "groceries-food": "groceries",
+  "jewelry-accessories": "jewelry",
+  "office-supplies": "office",
+  "pet-supplies": "pets",
+  "watches-accessories": "watches",
+  "computers-accessories": "computers",
+  "electronics": "electronics",
+  "tools-hardware": "tools",
+  "home-appliances": "home_appliances",
+  "home-living": "home",
+  "health-wellness": "health",
+  "sports-fitness": "sports",
+  "fashion-clothing": "fashion",
+  "shoes-footwear": "shoes",
+  "mobile-accessories": "mobile",
+  "mobile": "mobile",
+  "beauty-personal-care": "beauty",
+  "beauty": "beauty",
+  "kids-baby": "kids",
+  "kitchen-dining": "kitchen",
+  "toys-games": "toys",
+  "books-stationery": "books",
+  "automotive": "automotive"
+};
+
 // Keyword mapping configuration with English and Bengali support
 // IMPORTANT: Specific multi-word patterns and sub-domains MUST come before generic parent categories.
 const CATEGORY_KEYWORDS = [
@@ -689,24 +717,42 @@ function matchesKeyword(textLower, kwLower) {
 }
 
 /**
- * Gets the corresponding SVG Data URI for a given category name based on keyword matching.
+ * Gets the corresponding SVG Data URI for a given category name or slug.
+ * Prioritizes exact slug key-value dictionary mapping, then fallback keyword matching.
  * @param {string} categoryName - Name of the category
+ * @param {string} [categorySlug] - Slug of the category
  * @returns {string} SVG Data URI
  */
-export function getCategoryAutoIcon(categoryName) {
-  if (!categoryName || typeof categoryName !== 'string') {
-    return CATEGORY_ICON_SVGS.default;
+export function getCategoryAutoIcon(categoryName, categorySlug) {
+  // 1. Check exact slug key-value map if categorySlug is provided
+  if (categorySlug && typeof categorySlug === 'string') {
+    const slugKey = categorySlug.toLowerCase().trim();
+    if (SLUG_TO_ICON_KEY_MAP[slugKey] && CATEGORY_ICON_SVGS[SLUG_TO_ICON_KEY_MAP[slugKey]]) {
+      return CATEGORY_ICON_SVGS[SLUG_TO_ICON_KEY_MAP[slugKey]];
+    }
   }
 
-  const nameLower = categoryName.toLowerCase().trim();
-  if (!nameLower) {
-    return CATEGORY_ICON_SVGS.default;
-  }
+  if (categoryName && typeof categoryName === 'string') {
+    const nameTrimmed = categoryName.trim();
+    const nameLower = nameTrimmed.toLowerCase();
 
-  for (const item of CATEGORY_KEYWORDS) {
-    const match = item.keywords.some(kw => matchesKeyword(nameLower, kw.toLowerCase()));
-    if (match) {
-      return CATEGORY_ICON_SVGS[item.key] || CATEGORY_ICON_SVGS.default;
+    // 2. Check slug generated from categoryName against SLUG_TO_ICON_KEY_MAP
+    const generatedSlug = nameLower.replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    if (generatedSlug && SLUG_TO_ICON_KEY_MAP[generatedSlug] && CATEGORY_ICON_SVGS[SLUG_TO_ICON_KEY_MAP[generatedSlug]]) {
+      return CATEGORY_ICON_SVGS[SLUG_TO_ICON_KEY_MAP[generatedSlug]];
+    }
+
+    // 3. Direct key check on SLUG_TO_ICON_KEY_MAP
+    if (SLUG_TO_ICON_KEY_MAP[nameLower] && CATEGORY_ICON_SVGS[SLUG_TO_ICON_KEY_MAP[nameLower]]) {
+      return CATEGORY_ICON_SVGS[SLUG_TO_ICON_KEY_MAP[nameLower]];
+    }
+
+    // 4. Keyword matching fallback
+    for (const item of CATEGORY_KEYWORDS) {
+      const match = item.keywords.some(kw => matchesKeyword(nameLower, kw.toLowerCase()));
+      if (match) {
+        return CATEGORY_ICON_SVGS[item.key] || CATEGORY_ICON_SVGS.default;
+      }
     }
   }
 
@@ -715,21 +761,26 @@ export function getCategoryAutoIcon(categoryName) {
 
 /**
  * Ensures a valid image URL or Data URI is returned for a category.
- * If image is empty, malformed, contains HTML tags, or is not a valid URL/Data URI,
- * it returns the auto-generated fallback SVG icon for the category name.
+ * If image is empty, malformed, contains HTML tags, or is an auto SVG Data URI,
+ * it returns the auto-generated SVG icon from the exact slug mapping or category name.
  * @param {string} image - Image URL or Data URI from DB/input
  * @param {string} categoryName - Name of the category
+ * @param {string} [categorySlug] - Slug of the category
  * @returns {string} Sanitized image URL or Data URI
  */
-export function getValidCategoryImageUrl(image, categoryName) {
+export function getValidCategoryImageUrl(image, categoryName, categorySlug) {
   if (image && typeof image === 'string') {
     const trimmed = image.trim();
     if (trimmed) {
       // Reject raw HTML tag strings (e.g. <img ...> or <svg ...>)
       if (trimmed.startsWith('<') || trimmed.includes('<img') || trimmed.includes('<svg')) {
-        return getCategoryAutoIcon(categoryName);
+        return getCategoryAutoIcon(categoryName, categorySlug);
       }
-      // Valid HTTP/HTTPS URL, Data URI, relative path, or non-spaced string
+      // If it's a data:image/svg+xml URI (auto fallback SVG), re-evaluate with current slug/name mapping to avoid stale cached SVGs
+      if (trimmed.startsWith('data:image/svg+xml')) {
+        return getCategoryAutoIcon(categoryName, categorySlug);
+      }
+      // Valid HTTP/HTTPS URL, relative path, or custom uploaded image
       if (
         trimmed.startsWith('http://') ||
         trimmed.startsWith('https://') ||
@@ -743,10 +794,11 @@ export function getValidCategoryImageUrl(image, categoryName) {
       }
     }
   }
-  return getCategoryAutoIcon(categoryName);
+  return getCategoryAutoIcon(categoryName, categorySlug);
 }
 
 if (typeof window !== 'undefined') {
+  window.SLUG_TO_ICON_KEY_MAP = SLUG_TO_ICON_KEY_MAP;
   window.getCategoryAutoIcon = getCategoryAutoIcon;
   window.getValidCategoryImageUrl = getValidCategoryImageUrl;
   window.CATEGORY_ICON_SVGS = CATEGORY_ICON_SVGS;
