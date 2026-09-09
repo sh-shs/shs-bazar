@@ -161,7 +161,7 @@ export async function createCategory(categoryData) {
   const docId = slug;
   const docRef = doc(db, 'categories', docId);
 
-  let finalImage = getValidCategoryImageUrl(image, name);
+  let finalImage = getValidCategoryImageUrl(image, name, slug);
 
   const payload = {
     name,
@@ -206,7 +206,7 @@ export async function updateCategory(catId, categoryData) {
     throw new Error('অন্য একটি ক্যাটাগরিতে এই স্লাগ ব্যবহার করা হয়েছে। (This category slug already exists)');
   }
 
-  let finalImage = getValidCategoryImageUrl(categoryData.image, name);
+  let finalImage = getValidCategoryImageUrl(categoryData.image, name, slug);
 
   const payload = {
     name,
@@ -245,15 +245,37 @@ export async function fetchCategoriesFromDB() {
   try {
     const snap = await getDocs(collection(db, 'categories'));
     const list = [];
+    const updatePromises = [];
+
     snap.forEach(d => {
       const data = d.data();
+      const slug = data.slug || d.id;
+      const sanitizedImage = getValidCategoryImageUrl(data.image, data.name, slug);
+
+      // Requirement 4: If database category has an old/incorrect icon value or stale SVG fallback Data URI,
+      // overwrite/update it with the current exact mapped icon.
+      if (data.image !== sanitizedImage && (data.image?.startsWith('data:image/svg+xml') || !data.image)) {
+        updatePromises.push(
+          updateDoc(doc(db, 'categories', d.id), {
+            image: sanitizedImage,
+            updatedAt: new Date()
+          }).catch(err => console.warn(`Error auto-updating category ${d.id} icon:`, err))
+        );
+      }
+
       list.push({
         id: d.id,
-        slug: data.slug || d.id,
+        slug,
         isActive: data.isActive !== false,
-        ...data
+        ...data,
+        image: sanitizedImage
       });
     });
+
+    if (updatePromises.length > 0) {
+      Promise.all(updatePromises).catch(() => {});
+    }
+
     return list;
   } catch (err) {
     console.error('Error fetching categories from DB:', err);

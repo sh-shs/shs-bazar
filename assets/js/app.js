@@ -696,7 +696,7 @@ async function initApp() {
       const renderCategoriesUI = (cats) => {
         if (cats && cats.length > 0) {
           catGrid.innerHTML = cats.map(cat => {
-            const catImgSrc = getValidCategoryImageUrl(cat.image, cat.name);
+            const catImgSrc = getValidCategoryImageUrl(cat.image, cat.name, cat.slug || cat.id);
             const safeCatName = (cat.name || 'Category').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
             const safeCatId = encodeURIComponent(cat.id || cat.slug || '');
             return `
