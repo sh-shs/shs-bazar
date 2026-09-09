@@ -6,9 +6,8 @@
 function createSvgDataUri(svgContent) {
   const cleanSvg = svgContent
     .trim()
-    .replace(/\s+/g, ' ')
-    .replace(/#/g, '%23');
-  return `data:image/svg+xml;utf8,${cleanSvg}`;
+    .replace(/\s+/g, ' ');
+  return `data:image/svg+xml,${encodeURIComponent(cleanSvg)}`;
 }
 
 // Crisp, high-definition 200x200 SVG category icons

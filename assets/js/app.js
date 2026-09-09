@@ -696,13 +696,15 @@ async function initApp() {
       const renderCategoriesUI = (cats) => {
         if (cats && cats.length > 0) {
           catGrid.innerHTML = cats.map(cat => {
-            const catImgSrc = cat.image || getCategoryAutoIcon(cat.name);
+            const catImgSrc = (cat.image && cat.image.trim()) ? cat.image.trim() : getCategoryAutoIcon(cat.name);
+            const safeCatName = (cat.name || 'Category').replace(/"/g, '&quot;');
+            const safeCatId = encodeURIComponent(cat.id || cat.slug || '');
             return `
-              <div class="category-card" onclick="window.location.href='shop.html?category=${cat.id}'">
+              <div class="category-card" onclick="window.location.href='shop.html?category=${safeCatId}'">
                 <div class="category-icon-box">
-                  <img src="${catImgSrc}" alt="${cat.name}" loading="lazy" class="category-img">
+                  <img src="${catImgSrc}" alt="${safeCatName}" loading="lazy" class="category-img">
                 </div>
-                <span class="category-name">${cat.name}</span>
+                <span class="category-name">${cat.name || ''}</span>
               </div>
             `;
           }).join('');
