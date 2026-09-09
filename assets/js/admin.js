@@ -10,15 +10,13 @@ import {
   setDoc,
   updateDoc,
   deleteDoc,
-  query,
-  where,
   ref,
   uploadBytesResumable,
   getDownloadURL
 } from './firebase-config.js';
-import { SUPER_ADMIN_EMAILS, SUPER_ADMIN_EMAIL, currentUser, userProfile } from './auth.js';
+import { SUPER_ADMIN_EMAILS } from './auth.js';
 import { clearCategoryCache } from './products.js';
-import { getCategoryAutoIcon, getValidCategoryImageUrl } from './category-icons.js';
+import { getValidCategoryImageUrl } from './category-icons.js';
 
 export function isSuperAdminUser(user, profile) {
   if (!user) return false;
@@ -69,13 +67,6 @@ export async function saveAdminDeliverySettings(insideKushtia, outsideKushtia) {
   await setDoc(doc(db, 'settings', 'delivery'), {
     insideKushtia: Number(insideKushtia),
     outsideKushtia: Number(outsideKushtia),
-    updatedAt: new Date()
-  }, { merge: true });
-}
-
-export async function saveAdminAutoReplySettings(autoReply) {
-  await setDoc(doc(db, 'settings', 'general'), {
-    autoReply: autoReply.trim(),
     updatedAt: new Date()
   }, { merge: true });
 }

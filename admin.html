@@ -732,7 +732,6 @@
       deleteUserDoc,
       fetchOrdersFromDB,
       updateOrderStatus,
-      updatePaymentStatus,
       deleteOrderDoc,
       createCoupon,
       updateCoupon,
@@ -748,12 +747,12 @@
       uploadMediaFile,
       updateProductStock
     } from './assets/js/admin.js';
-    import { onAuthStateUpdate, SUPER_ADMIN_EMAIL } from './assets/js/auth.js';
+    import { onAuthStateUpdate } from './assets/js/auth.js';
     import { showToast } from './assets/js/app.js';
     import { db, collection, getDocs, doc, deleteDoc, updateDoc } from './assets/js/firebase-config.js';
     import { generatePDFInvoice } from './assets/js/invoice.js';
     import { FALLBACK_IMAGE } from './assets/js/products.js';
-    import { getCategoryAutoIcon, getValidCategoryImageUrl } from './assets/js/category-icons.js';
+    import { getValidCategoryImageUrl } from './assets/js/category-icons.js';
 
     // Global Admin State Store
     const adminState = {

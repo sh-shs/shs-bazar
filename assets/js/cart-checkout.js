@@ -1,5 +1,5 @@
 // Cart & Checkout Module
-import { getCart, saveCart, showToast } from './app.js';
+import { getCart, saveCart } from './app.js';
 import { db, collection, addDoc, getDocs, serverTimestamp, doc, getDoc } from './firebase-config.js';
 import { currentUser } from './auth.js';
 import { FALLBACK_IMAGE } from './products.js';
