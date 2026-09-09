@@ -1,5 +1,5 @@
 // Products Data Management & Firestore Helper Functions
-import { db, collection, getDocs, doc, getDoc, query, where, orderBy, limit, onSnapshot } from './firebase-config.js';
+import { db, collection, getDocs, doc, getDoc, query, where, limit, onSnapshot } from './firebase-config.js';
 import { isProductInWishlist } from './auth.js';
 
 export const FALLBACK_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 300 300'%3E%3Crect width='300' height='300' fill='%23F4F6F9'/%3E%3Cg transform='translate(100, 90)'%3E%3Crect x='0' y='0' width='100' height='80' rx='8' fill='none' stroke='%239CA3AF' stroke-width='6'/%3E%3Ccircle cx='30' cy='30' r='10' fill='%239CA3AF'/%3E%3Cpath d='M10 70 L35 40 L55 60 L70 45 L90 70 Z' fill='%239CA3AF'/%3E%3C/g%3E%3Ctext x='50%25' y='68%25' dominant-baseline='middle' text-anchor='middle' fill='%230B4D3C' font-size='18' font-weight='700' font-family='sans-serif'%3ESHS Bazar%3C/text%3E%3C/svg%3E";

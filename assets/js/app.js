@@ -1,9 +1,8 @@
 // Main Application Script (UI Wiring, Search, Cart State, Mobile Nav)
-import { fetchPublishedProducts, subscribeToPublishedProducts, fetchBanners, renderProductCard, renderSkeletonCards, renderErrorState, renderEmptyState, fetchActiveCategories, subscribeToActiveCategories, DEFAULT_CATEGORIES, DEFAULT_BANNERS, getProductShareUrl, FALLBACK_IMAGE } from './products.js';
-import { toggleWishlist, isProductInWishlist, currentUser, logoutUser, onAuthStateUpdate } from './auth.js';
-import { getCategoryAutoIcon, getValidCategoryImageUrl } from './category-icons.js';
+import { fetchPublishedProducts, subscribeToPublishedProducts, fetchBanners, renderProductCard, renderSkeletonCards, renderErrorState, renderEmptyState, fetchActiveCategories, subscribeToActiveCategories, DEFAULT_BANNERS, getProductShareUrl, FALLBACK_IMAGE } from './products.js';
+import { toggleWishlist, currentUser, logoutUser, onAuthStateUpdate } from './auth.js';
+import { getValidCategoryImageUrl } from './category-icons.js';
 import { TRANSLATIONS } from './translations.js';
-import { db, collection, query, where, getDocs, limit } from './firebase-config.js';
 
 export { TRANSLATIONS };
 
