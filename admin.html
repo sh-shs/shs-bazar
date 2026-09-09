@@ -753,7 +753,7 @@
     import { db, collection, getDocs, doc, deleteDoc, updateDoc } from './assets/js/firebase-config.js';
     import { generatePDFInvoice } from './assets/js/invoice.js';
     import { FALLBACK_IMAGE } from './assets/js/products.js';
-    import { getCategoryAutoIcon } from './assets/js/category-icons.js';
+    import { getCategoryAutoIcon, getValidCategoryImageUrl } from './assets/js/category-icons.js';
 
     // Global Admin State Store
     const adminState = {
@@ -1575,8 +1575,8 @@
               ${filtered.map(c => {
                 const prodCount = adminState.products.filter(p => p.category === c.id || p.category === c.slug || (p.category && p.category.toLowerCase() === (c.name || '').toLowerCase())).length;
                 const activeState = c.isActive !== false;
-                const catImgSrc = (c.image && c.image.trim()) ? c.image.trim() : getCategoryAutoIcon(c.name);
-                const safeCatName = (c.name || 'Category').replace(/"/g, '&quot;');
+                const catImgSrc = getValidCategoryImageUrl(c.image, c.name);
+                const safeCatName = (c.name || 'Category').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
                 const imageContent = `<img src="${catImgSrc}" alt="${safeCatName}" style="width:40px; height:40px; object-fit:cover; border-radius:50%; border:1.5px solid var(--primary-color, #0B4D3C);">`;
 
                 return `
@@ -1632,14 +1632,15 @@
           if (previewType) previewType.textContent = 'Uploaded Local File';
           if (previewNote) previewNote.textContent = file.name;
         } catch (e) {
-          previewImg.src = getCategoryAutoIcon(catName);
+          previewImg.src = getValidCategoryImageUrl('', catName);
         }
       } else if (urlVal) {
-        previewImg.src = urlVal;
-        if (previewType) previewType.textContent = 'Manual Image URL';
-        if (previewNote) previewNote.textContent = 'Custom provided image URL';
+        const validUrl = getValidCategoryImageUrl(urlVal, catName);
+        previewImg.src = validUrl;
+        if (previewType) previewType.textContent = validUrl === urlVal ? 'Manual Image URL' : 'Auto Fallback Icon';
+        if (previewNote) previewNote.textContent = validUrl === urlVal ? 'Custom provided image URL' : 'Provided URL was invalid or malformed';
       } else {
-        const autoIcon = getCategoryAutoIcon(catName);
+        const autoIcon = getValidCategoryImageUrl('', catName);
         previewImg.src = autoIcon;
         if (previewType) previewType.textContent = 'Auto Fallback Icon';
         if (previewNote) previewNote.textContent = catName ? `Matched for "${catName}"` : 'Default generic category icon';
@@ -1826,8 +1827,8 @@
           }
         }
 
-        if (!imageFile && !image) {
-          image = getCategoryAutoIcon(name);
+        if (!imageFile) {
+          image = getValidCategoryImageUrl(image, name);
         }
 
         const categoryPayload = {

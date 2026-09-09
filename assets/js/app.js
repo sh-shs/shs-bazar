@@ -1,7 +1,7 @@
 // Main Application Script (UI Wiring, Search, Cart State, Mobile Nav)
 import { fetchPublishedProducts, subscribeToPublishedProducts, fetchBanners, renderProductCard, renderSkeletonCards, renderErrorState, renderEmptyState, fetchActiveCategories, subscribeToActiveCategories, DEFAULT_CATEGORIES, DEFAULT_BANNERS, getProductShareUrl, FALLBACK_IMAGE } from './products.js';
 import { toggleWishlist, isProductInWishlist, currentUser, logoutUser, onAuthStateUpdate } from './auth.js';
-import { getCategoryAutoIcon } from './category-icons.js';
+import { getCategoryAutoIcon, getValidCategoryImageUrl } from './category-icons.js';
 import { TRANSLATIONS } from './translations.js';
 import { db, collection, query, where, getDocs, limit } from './firebase-config.js';
 
@@ -696,8 +696,8 @@ async function initApp() {
       const renderCategoriesUI = (cats) => {
         if (cats && cats.length > 0) {
           catGrid.innerHTML = cats.map(cat => {
-            const catImgSrc = (cat.image && cat.image.trim()) ? cat.image.trim() : getCategoryAutoIcon(cat.name);
-            const safeCatName = (cat.name || 'Category').replace(/"/g, '&quot;');
+            const catImgSrc = getValidCategoryImageUrl(cat.image, cat.name);
+            const safeCatName = (cat.name || 'Category').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
             const safeCatId = encodeURIComponent(cat.id || cat.slug || '');
             return `
               <div class="category-card" onclick="window.location.href='shop.html?category=${safeCatId}'">

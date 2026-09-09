@@ -328,7 +328,41 @@ export function getCategoryAutoIcon(categoryName) {
   return CATEGORY_ICON_SVGS.default;
 }
 
+/**
+ * Ensures a valid image URL or Data URI is returned for a category.
+ * If image is empty, malformed, contains HTML tags, or is not a valid URL/Data URI,
+ * it returns the auto-generated fallback SVG icon for the category name.
+ * @param {string} image - Image URL or Data URI from DB/input
+ * @param {string} categoryName - Name of the category
+ * @returns {string} Sanitized image URL or Data URI
+ */
+export function getValidCategoryImageUrl(image, categoryName) {
+  if (image && typeof image === 'string') {
+    const trimmed = image.trim();
+    if (trimmed) {
+      // Reject raw HTML tag strings (e.g. <img ...> or <svg ...>)
+      if (trimmed.startsWith('<') || trimmed.includes('<img') || trimmed.includes('<svg')) {
+        return getCategoryAutoIcon(categoryName);
+      }
+      // Valid HTTP/HTTPS URL, Data URI, relative path, or non-spaced string
+      if (
+        trimmed.startsWith('http://') ||
+        trimmed.startsWith('https://') ||
+        trimmed.startsWith('data:image/') ||
+        trimmed.startsWith('assets/') ||
+        trimmed.startsWith('./') ||
+        trimmed.startsWith('/') ||
+        !/\s/.test(trimmed)
+      ) {
+        return trimmed.replace(/"/g, '%22');
+      }
+    }
+  }
+  return getCategoryAutoIcon(categoryName);
+}
+
 if (typeof window !== 'undefined') {
   window.getCategoryAutoIcon = getCategoryAutoIcon;
+  window.getValidCategoryImageUrl = getValidCategoryImageUrl;
   window.CATEGORY_ICON_SVGS = CATEGORY_ICON_SVGS;
 }
