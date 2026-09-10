@@ -1,10 +1,69 @@
-// Main Application Script (UI Wiring, Search, Cart State, Mobile Nav)
+// Main Application Script (UI Wiring, Search, Cart State, Mobile Nav, PWA Service Worker)
 import { fetchPublishedProducts, subscribeToPublishedProducts, fetchBanners, renderProductCard, renderSkeletonCards, renderErrorState, renderEmptyState, fetchActiveCategories, subscribeToActiveCategories, DEFAULT_BANNERS, getProductShareUrl, FALLBACK_IMAGE } from './products.js';
 import { toggleWishlist, currentUser, logoutUser, onAuthStateUpdate } from './auth.js';
 import { getValidCategoryImageUrl } from './category-icons.js';
 import { TRANSLATIONS } from './translations.js';
 
 export { TRANSLATIONS };
+
+// Service Worker Registration
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./service-worker.js')
+      .then((reg) => {
+        console.log('[SW] Registered successfully with scope:', reg.scope);
+      })
+      .catch((err) => {
+        console.warn('[SW] Registration failed:', err);
+      });
+  });
+}
+
+// PWA Install Prompt Capture & Trigger
+let deferredPrompt = null;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  console.log('[PWA] beforeinstallprompt captured');
+  if (typeof window.renderDrawer === 'function') {
+    window.renderDrawer();
+  }
+});
+
+window.addEventListener('appinstalled', () => {
+  deferredPrompt = null;
+  console.log('[PWA] App installed successfully');
+  const lang = getCurrentLang();
+  const t = TRANSLATIONS[lang] || TRANSLATIONS.en;
+  showToast(t.installSuccess || 'SHS Bazar app installed successfully!');
+});
+
+export function installPWA() {
+  const lang = getCurrentLang();
+  const t = TRANSLATIONS[lang] || TRANSLATIONS.en;
+
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then((choiceResult) => {
+      if (choiceResult.outcome === 'accepted') {
+        showToast(t.installSuccess || 'SHS Bazar app installed successfully!');
+      }
+      deferredPrompt = null;
+    });
+  } else if (window.matchMedia('(display-mode: standalone)').matches || navigator.standalone) {
+    showToast(lang === 'bn' ? 'SHS Bazar ইতিমধ্যে ইনস্টল করা আছে!' : 'SHS Bazar is already installed & running!');
+  } else {
+    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (isIOS) {
+      showToast(t.iosInstallGuide || "To install: tap Share button in Safari and select 'Add to Home Screen'.");
+    } else {
+      showToast(lang === 'bn' ? "ইনস্টল করতে ব্রাউজারের মেনু (⋮) চেপে 'Install app' বা 'Add to Home screen' বেছে নিন" : "To install: open browser menu (⋮) and select 'Install app' or 'Add to Home screen'");
+    }
+  }
+}
+
+window.installPWA = installPWA;
 
 export function getCurrentLang() {
   return localStorage.getItem('shs_lang') || 'en';
@@ -321,6 +380,7 @@ export function renderDrawer() {
       <li><a href="contact.html" class="drawer-menu-item ${currentPath === 'contact.html' ? 'active' : ''}"><i class="fas fa-headset" style="width: 20px;"></i> <span>${t.contactUs}</span></a></li>
       <li><a href="about.html" class="drawer-menu-item ${currentPath === 'about.html' ? 'active' : ''}"><i class="fas fa-info-circle" style="width: 20px;"></i> <span>${t.aboutUs}</span></a></li>
       <li><a href="#" onclick="event.preventDefault(); toggleDrawer(); openShareModal();" class="drawer-menu-item"><i class="fas fa-share-alt" style="width: 20px; color: var(--accent-color);"></i> <span>${t.shareApp}</span></a></li>
+      <li><a href="#" onclick="event.preventDefault(); toggleDrawer(); installPWA();" class="drawer-menu-item" style="color: var(--primary-color); font-weight: 700;"><i class="fas fa-download" style="width: 20px; color: var(--primary-color);"></i> <span>${t.installApp || 'Install SHS Bazar App'}</span></a></li>
 
       <!-- 5. LOGOUT (Bottom Divider & Item) -->
       ${isLoggedIn ? `

@@ -35,6 +35,10 @@ export const TRANSLATIONS = {
     contactUs: "Contact Us",
     aboutUs: "About Us",
     shareApp: "Share Website / Rate Us",
+    installApp: "Install SHS Bazar App",
+    installAppDesc: "Install SHS Bazar on your home screen for quick access & offline support",
+    installSuccess: "SHS Bazar App installed successfully!",
+    iosInstallGuide: "To install SHS Bazar: tap the Share button in Safari and select 'Add to Home Screen'.",
 
     // Homepage Sections
     featuredCategories: "Featured Categories",
@@ -204,6 +208,10 @@ export const TRANSLATIONS = {
     contactUs: "যোগাযোগ করুন",
     aboutUs: "আমাদের সম্পর্কে",
     shareApp: "ওয়েবসাইট শেয়ার / রেটিং দিন",
+    installApp: "SHS Bazar অ্যাপ ইনস্টল করুন",
+    installAppDesc: "দ্রুত এবং অফলাইনে ব্যবহারের জন্য হোম স্ক্রিনে অ্যাপটি যুক্ত করুন",
+    installSuccess: "SHS Bazar অ্যাপ সফলভাবে ইনস্টল করা হয়েছে!",
+    iosInstallGuide: "SHS Bazar ইনস্টল করতে: সাফারি ব্রাউজারের শেয়ার বাটনে চাপ দিয়ে 'Add to Home Screen' সিলেক্ট করুন।",
 
     // Homepage Sections
     featuredCategories: "বিশেষ ক্যাটাগরি",
