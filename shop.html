@@ -32,11 +32,6 @@
   <div class="section-wrapper">
     <div id="category-filter-bar" style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 12px;"></div>
     <div class="product-grid" id="shop-products-grid"></div>
-    <div id="shop-load-more-container" style="text-align: center; margin-top: 20px; display: none;">
-      <button id="shop-load-more-btn" class="btn-outline" style="padding: 10px 24px; font-weight: bold; font-size: 0.9rem; border-radius: var(--radius-sm);">
-        <span data-i18n="loadMore">Load More</span> <i class="fas fa-chevron-down"></i>
-      </button>
-    </div>
   </div>
 
   <nav class="bottom-nav">
@@ -75,8 +70,6 @@
 
     async function initShopPage() {
       const grid = document.getElementById('shop-products-grid');
-      const loadMoreContainer = document.getElementById('shop-load-more-container');
-      const loadMoreBtn = document.getElementById('shop-load-more-btn');
 
       if (grid) {
         grid.innerHTML = renderSkeletonCards(8);
@@ -147,33 +140,12 @@
 
         if (grid) {
           if (displayed.length > 0) {
-            const PAGE_SIZE = 12;
-            let visibleCount = PAGE_SIZE;
-
-            const renderShopGrid = () => {
-              const visible = displayed.slice(0, visibleCount);
-              grid.innerHTML = visible.map(renderProductCard).join('');
-
-              if (loadMoreContainer && loadMoreBtn) {
-                if (visibleCount < displayed.length) {
-                  loadMoreContainer.style.display = 'block';
-                  loadMoreBtn.onclick = () => {
-                    visibleCount += PAGE_SIZE;
-                    renderShopGrid();
-                  };
-                } else {
-                  loadMoreContainer.style.display = 'none';
-                }
-              }
-            };
-
-            renderShopGrid();
+            grid.innerHTML = displayed.map(renderProductCard).join('');
           } else {
             const lang = getCurrentLang ? getCurrentLang() : 'en';
             const dict = TRANSLATIONS || TRANSLATIONS_FILE;
             const t = dict ? (dict[lang] || dict.en) : {};
             grid.innerHTML = renderEmptyState(t.noProductsFound || 'কোনো প্রোডাক্ট পাওয়া যায়নি');
-            if (loadMoreContainer) loadMoreContainer.style.display = 'none';
           }
         }
       } catch (err) {
