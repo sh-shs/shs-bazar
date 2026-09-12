@@ -819,37 +819,12 @@ async function initApp() {
         trendingGrid.innerHTML = renderEmptyState(t.noTrendingProducts || 'বর্তমানে কোনো ট্রেন্ডিং প্রোডাক্ট নেই');
       }
 
-      // All Products grid with pagination / Load More
+      // All Products grid - display all products directly
       if (allProductsGrid) {
         if (products.length > 0) {
-          const PAGE_SIZE = 8;
-          let visibleCount = PAGE_SIZE;
-
-          const renderAllProductsGrid = () => {
-            const visibleProducts = products.slice(0, visibleCount);
-            allProductsGrid.innerHTML = visibleProducts.map(renderProductCard).join('');
-
-            const loadMoreContainer = document.getElementById('load-more-container');
-            const loadMoreBtn = document.getElementById('load-more-btn');
-
-            if (loadMoreContainer && loadMoreBtn) {
-              if (visibleCount < products.length) {
-                loadMoreContainer.style.display = 'block';
-                loadMoreBtn.onclick = () => {
-                  visibleCount += PAGE_SIZE;
-                  renderAllProductsGrid();
-                };
-              } else {
-                loadMoreContainer.style.display = 'none';
-              }
-            }
-          };
-
-          renderAllProductsGrid();
+          allProductsGrid.innerHTML = products.map(renderProductCard).join('');
         } else {
           allProductsGrid.innerHTML = renderEmptyState(t.noProductsFound || 'কোনো প্রোডাক্ট পাওয়া যায়নি');
-          const loadMoreContainer = document.getElementById('load-more-container');
-          if (loadMoreContainer) loadMoreContainer.style.display = 'none';
         }
       }
     };
