@@ -1941,10 +1941,22 @@
     };
 
     window.deleteCustomer = async (id) => {
-      if (confirm('Delete customer account?')) {
-        await deleteUserDoc(id);
-        showToast('Customer account deleted');
-        await loadUsersData();
+      if (!id) return;
+      if (confirm('আপনি কি নিশ্চিত এই কাস্টমারকে ডিলিট করতে চান?')) {
+        try {
+          await deleteUserDoc(id);
+          // Remove customer locally for instant table update without needing a refresh
+          if (Array.isArray(adminState.customers)) {
+            adminState.customers = adminState.customers.filter(c => c.id !== id);
+          }
+          renderCustomersTable();
+          showToast('Customer account deleted');
+          // Re-sync with database
+          await loadUsersData();
+        } catch (err) {
+          console.error('Error deleting customer:', err);
+          showToast(err.message || 'Failed to delete customer', 'error');
+        }
       }
     };
 
