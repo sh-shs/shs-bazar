@@ -12,7 +12,9 @@ import {
   deleteDoc,
   ref,
   uploadBytesResumable,
-  getDownloadURL
+  getDownloadURL,
+  query,
+  where
 } from './firebase-config.js';
 import { SUPER_ADMIN_EMAILS } from './auth.js';
 import { clearCategoryCache } from './products.js';
@@ -436,6 +438,45 @@ export async function updateUserProfile(userId, data) {
 }
 
 export async function deleteUserDoc(userId) {
+  if (!userId) return;
+
+  // 1. Check user profile doc to see if username exists
+  try {
+    const userRef = doc(db, 'users', userId);
+    const userSnap = await getDoc(userRef);
+    if (userSnap.exists()) {
+      const userData = userSnap.data();
+      if (userData && userData.username) {
+        const usernameDocRef = doc(db, 'usernames', userData.username.toLowerCase());
+        await deleteDoc(usernameDocRef).catch(err => console.warn('Failed to delete username doc directly:', err));
+      }
+    }
+  } catch (err) {
+    console.warn('Error reading user profile before delete:', err);
+  }
+
+  // 2. Query usernames collection for any reservation matching this userId/uid to release username handle
+  try {
+    const usernamesRef = collection(db, 'usernames');
+    const q1 = query(usernamesRef, where('userId', '==', userId));
+    const snap1 = await getDocs(q1);
+    const deletePromises = [];
+    snap1.forEach(uDoc => {
+      deletePromises.push(deleteDoc(doc(db, 'usernames', uDoc.id)));
+    });
+
+    const q2 = query(usernamesRef, where('uid', '==', userId));
+    const snap2 = await getDocs(q2);
+    snap2.forEach(uDoc => {
+      deletePromises.push(deleteDoc(doc(db, 'usernames', uDoc.id)));
+    });
+
+    await Promise.allSettled(deletePromises);
+  } catch (err) {
+    console.warn('Error releasing username reservation:', err);
+  }
+
+  // 3. Delete user document from users collection
   await deleteDoc(doc(db, 'users', userId));
 }
 
