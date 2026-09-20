@@ -117,7 +117,8 @@
 
     async function initProductDetail() {
       const params = new URLSearchParams(window.location.search);
-      const identifier = params.get('id') || params.get('slug');
+      const pathMatch = window.location.pathname.match(/\/p\/([^\/]+)/);
+      const identifier = params.get('id') || params.get('slug') || (pathMatch ? decodeURIComponent(pathMatch[1]) : null);
       currentRequestIdentifier = identifier;
 
       const container = document.getElementById('pd-container');
