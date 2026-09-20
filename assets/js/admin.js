@@ -33,11 +33,38 @@ export function isSuperAdminUser(user, profile) {
 export async function fetchAdminSettings() {
   const DEFAULT_AUTO_REPLY = "আসসালামু আলাইকুম স্যার/ম্যাম। আপনি কিছুক্ষণ অপেক্ষা করুন। আমাদের প্রতিনিধি আপনার সাথে শীঘ্রই যোগাযোগ করবে। ধন্যবাদ।";
   try {
-    const deliverySnap = await getDoc(doc(db, 'settings', 'delivery'));
-    const paymentSnap = await getDoc(doc(db, 'settings', 'payment'));
-    const generalSnap = await getDoc(doc(db, 'settings', 'general'));
+    const [
+      deliverySnap,
+      paymentSnap,
+      generalSnap,
+      brandingSnap,
+      socialSnap,
+      orderSnap,
+      policiesSnap,
+      maintenanceSnap,
+      seoSnap,
+      analyticsSnap
+    ] = await Promise.all([
+      getDoc(doc(db, 'settings', 'delivery')),
+      getDoc(doc(db, 'settings', 'payment')),
+      getDoc(doc(db, 'settings', 'general')),
+      getDoc(doc(db, 'settings', 'branding')),
+      getDoc(doc(db, 'settings', 'social')),
+      getDoc(doc(db, 'settings', 'order')),
+      getDoc(doc(db, 'settings', 'policies')),
+      getDoc(doc(db, 'settings', 'maintenance')),
+      getDoc(doc(db, 'settings', 'seo')),
+      getDoc(doc(db, 'settings', 'analytics'))
+    ]);
 
     const generalData = generalSnap.exists() ? generalSnap.data() : {};
+    const brandingData = brandingSnap.exists() ? brandingSnap.data() : {};
+    const socialData = socialSnap.exists() ? socialSnap.data() : {};
+    const orderData = orderSnap.exists() ? orderSnap.data() : {};
+    const policiesData = policiesSnap.exists() ? policiesSnap.data() : {};
+    const maintenanceData = maintenanceSnap.exists() ? maintenanceSnap.data() : {};
+    const seoData = seoSnap.exists() ? seoSnap.data() : {};
+    const analyticsData = analyticsSnap.exists() ? analyticsSnap.data() : {};
 
     return {
       delivery: deliverySnap.exists() ? deliverySnap.data() : { insideKushtia: 100, outsideKushtia: 160 },
@@ -48,6 +75,45 @@ export async function fetchAdminSettings() {
         supportEmail: 'saripofficialsupport@gmail.com',
         autoReply: DEFAULT_AUTO_REPLY,
         ...generalData
+      },
+      branding: {
+        logoUrl: '',
+        faviconUrl: '',
+        ...brandingData
+      },
+      social: {
+        facebookUrl: 'https://facebook.com/shsbazarofficial',
+        whatsappNumber: '01342697743',
+        telegramUrl: 'https://t.me/shsbazarofficial',
+        ...socialData
+      },
+      order: {
+        minOrderAmount: 0,
+        freeDeliveryThreshold: 0,
+        enableFreeDelivery: false,
+        invoicePrefix: 'SHS-',
+        ...orderData
+      },
+      policies: {
+        returnPolicyHtml: '',
+        shippingPolicyHtml: '',
+        privacyPolicyHtml: '',
+        ...policiesData
+      },
+      maintenance: {
+        enabled: false,
+        message: 'সাইট রক্ষণাবেক্ষণ চলছে, শীঘ্রই ফিরে আসছি',
+        ...maintenanceData
+      },
+      seo: {
+        metaTitle: 'SHS Bazar - Online Shopping in Kushtia',
+        metaDescription: 'SHS Bazar offers online shopping in Kushtia, Bangladesh.',
+        ...seoData
+      },
+      analytics: {
+        googleAnalyticsId: '',
+        facebookPixelId: '',
+        ...analyticsData
       }
     };
   } catch (err) {
@@ -60,7 +126,18 @@ export async function fetchAdminSettings() {
         hotline: '+8809658183506',
         supportEmail: 'saripofficialsupport@gmail.com',
         autoReply: DEFAULT_AUTO_REPLY
-      }
+      },
+      branding: { logoUrl: '', faviconUrl: '' },
+      social: {
+        facebookUrl: 'https://facebook.com/shsbazarofficial',
+        whatsappNumber: '01342697743',
+        telegramUrl: 'https://t.me/shsbazarofficial'
+      },
+      order: { minOrderAmount: 0, freeDeliveryThreshold: 0, enableFreeDelivery: false, invoicePrefix: 'SHS-' },
+      policies: { returnPolicyHtml: '', shippingPolicyHtml: '', privacyPolicyHtml: '' },
+      maintenance: { enabled: false, message: 'সাইট রক্ষণাবেক্ষণ চলছে, শীঘ্রই ফিরে আসছি' },
+      seo: { metaTitle: 'SHS Bazar - Online Shopping in Kushtia', metaDescription: 'SHS Bazar offers online shopping in Kushtia, Bangladesh.' },
+      analytics: { googleAnalyticsId: '', facebookPixelId: '' }
     };
   }
 }
@@ -69,6 +146,61 @@ export async function saveAdminDeliverySettings(insideKushtia, outsideKushtia) {
   await setDoc(doc(db, 'settings', 'delivery'), {
     insideKushtia: Number(insideKushtia),
     outsideKushtia: Number(outsideKushtia),
+    updatedAt: new Date()
+  }, { merge: true });
+}
+
+export async function saveAdminBrandingSettings(data) {
+  await setDoc(doc(db, 'settings', 'branding'), {
+    ...data,
+    updatedAt: new Date()
+  }, { merge: true });
+}
+
+export async function saveAdminSocialSettings(data) {
+  await setDoc(doc(db, 'settings', 'social'), {
+    ...data,
+    updatedAt: new Date()
+  }, { merge: true });
+}
+
+export async function saveAdminOrderSettings(data) {
+  await setDoc(doc(db, 'settings', 'order'), {
+    minOrderAmount: Number(data.minOrderAmount || 0),
+    freeDeliveryThreshold: Number(data.freeDeliveryThreshold || 0),
+    enableFreeDelivery: Boolean(data.enableFreeDelivery),
+    invoicePrefix: (data.invoicePrefix || 'SHS-').trim(),
+    updatedAt: new Date()
+  }, { merge: true });
+}
+
+export async function saveAdminPoliciesSettings(data) {
+  await setDoc(doc(db, 'settings', 'policies'), {
+    ...data,
+    updatedAt: new Date()
+  }, { merge: true });
+}
+
+export async function saveAdminMaintenanceSettings(data) {
+  await setDoc(doc(db, 'settings', 'maintenance'), {
+    enabled: Boolean(data.enabled),
+    message: (data.message || '').trim(),
+    updatedAt: new Date()
+  }, { merge: true });
+}
+
+export async function saveAdminSeoSettings(data) {
+  await setDoc(doc(db, 'settings', 'seo'), {
+    metaTitle: (data.metaTitle || '').trim(),
+    metaDescription: (data.metaDescription || '').trim(),
+    updatedAt: new Date()
+  }, { merge: true });
+}
+
+export async function saveAdminAnalyticsSettings(data) {
+  await setDoc(doc(db, 'settings', 'analytics'), {
+    googleAnalyticsId: (data.googleAnalyticsId || '').trim(),
+    facebookPixelId: (data.facebookPixelId || '').trim(),
     updatedAt: new Date()
   }, { merge: true });
 }

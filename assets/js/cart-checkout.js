@@ -4,52 +4,55 @@ import { db, collection, addDoc, getDocs, serverTimestamp, doc, getDoc } from '.
 import { currentUser } from './auth.js';
 import { FALLBACK_IMAGE } from './products.js';
 
-// Default delivery rates if not dynamically overridden in Firestore settings
+// Default delivery rates & order settings
 let deliverySettings = {
   insideKushtia: 100,
   outsideKushtia: 160
 };
-let deliverySettingsCached = null;
+let orderSettings = {
+  minOrderAmount: 0,
+  freeDeliveryThreshold: 0,
+  enableFreeDelivery: false,
+  invoicePrefix: 'SHS-'
+};
+let settingsCached = false;
 
 export async function loadDeliverySettings() {
-  if (deliverySettingsCached) {
-    return deliverySettings;
+  if (settingsCached) {
+    return { ...deliverySettings, delivery: deliverySettings, order: orderSettings };
   }
-  try {
-    const sessionData = sessionStorage.getItem('shs_cached_delivery_settings');
-    if (sessionData) {
-      deliverySettingsCached = JSON.parse(sessionData);
-      deliverySettings = { ...deliverySettings, ...deliverySettingsCached };
-      return deliverySettings;
-    }
-  } catch (e) {}
 
   try {
-    const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('Delivery settings load timeout')), 1200)
-    );
-    const docSnap = await Promise.race([
+    const [delSnap, ordSnap] = await Promise.all([
       getDoc(doc(db, 'settings', 'delivery')),
-      timeoutPromise
+      getDoc(doc(db, 'settings', 'order'))
     ]);
-    if (docSnap.exists()) {
-      deliverySettingsCached = docSnap.data();
-      deliverySettings = { ...deliverySettings, ...deliverySettingsCached };
-      try {
-        sessionStorage.setItem('shs_cached_delivery_settings', JSON.stringify(deliverySettingsCached));
-      } catch (e) {}
+
+    if (delSnap.exists()) {
+      deliverySettings = { ...deliverySettings, ...delSnap.data() };
     }
+    if (ordSnap.exists()) {
+      orderSettings = { ...orderSettings, ...ordSnap.data() };
+    }
+    settingsCached = true;
   } catch (err) {
-    console.warn('Using default delivery settings:', err);
+    console.warn('Using default delivery/order settings:', err);
   }
-  return deliverySettings;
+  return { ...deliverySettings, delivery: deliverySettings, order: orderSettings };
 }
 
-export function calculateDeliveryCharge(district) {
+export function calculateDeliveryCharge(district, subtotal = 0) {
+  if (orderSettings.enableFreeDelivery && Number(orderSettings.freeDeliveryThreshold) > 0 && subtotal >= Number(orderSettings.freeDeliveryThreshold)) {
+    return 0;
+  }
   if (district && district.trim().toLowerCase() === 'kushtia') {
     return Number(deliverySettings.insideKushtia);
   }
   return Number(deliverySettings.outsideKushtia);
+}
+
+export function getOrderSettings() {
+  return orderSettings;
 }
 
 // Render Cart Page Elements
@@ -144,10 +147,17 @@ export async function placeOrder(orderData) {
     // Server-side recalculation of subtotal
     const calculatedSubtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
-    // Server-side recalculation of delivery charge
-    const district = orderData.shippingAddress?.district || 'Kushtia';
     await loadDeliverySettings();
-    const calculatedDelivery = calculateDeliveryCharge(district);
+
+    // Check Minimum Order Amount
+    const minAmount = Number(orderSettings.minOrderAmount || 0);
+    if (minAmount > 0 && calculatedSubtotal < minAmount) {
+      throw new Error(`কমপক্ষে ৳${minAmount.toLocaleString('bn-BD')} টাকার অর্ডার করতে হবে। (Minimum order amount is ৳${minAmount})`);
+    }
+
+    // Server-side recalculation of delivery charge (considering free delivery threshold)
+    const district = orderData.shippingAddress?.district || 'Kushtia';
+    const calculatedDelivery = calculateDeliveryCharge(district, calculatedSubtotal);
 
     // Server-side coupon verification and recalculation
     let calculatedDiscount = 0;

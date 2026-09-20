@@ -1,6 +1,7 @@
 // Main Application Script (UI Wiring, Search, Cart State, Mobile Nav, PWA Service Worker)
 import { fetchPublishedProducts, subscribeToPublishedProducts, fetchBanners, renderProductCard, renderSkeletonCards, renderErrorState, renderEmptyState, fetchActiveCategories, subscribeToActiveCategories, DEFAULT_BANNERS, getProductShareUrl, FALLBACK_IMAGE } from './products.js';
 import { toggleWishlist, currentUser, logoutUser, onAuthStateUpdate } from './auth.js';
+import { fetchAdminSettings, isSuperAdminUser } from './admin.js';
 import { getValidCategoryImageUrl } from './category-icons.js';
 import { TRANSLATIONS } from './translations.js';
 
@@ -716,6 +717,188 @@ export function initCarousel(banners) {
   startAutoRotate();
 }
 
+export async function applyGlobalStoreSettings() {
+  try {
+    const settings = await fetchAdminSettings();
+    if (!settings) return;
+
+    // 1. Maintenance Mode Check
+    const currentPath = window.location.pathname.split('/').pop() || 'index.html';
+    const overlay = document.getElementById('maintenance-mode-overlay');
+    if (settings.maintenance?.enabled && currentPath !== 'admin.html') {
+      const isAdmin = currentUser && (currentUser.email === 'banglabazaroffical@gmail.com' || currentUser.role === 'admin');
+      if (!isAdmin) {
+        let el = overlay;
+        if (!el) {
+          el = document.createElement('div');
+          el.id = 'maintenance-mode-overlay';
+          el.style.cssText = 'position:fixed; top:0; left:0; width:100vw; height:100vh; background:#0F172A; color:#FFF; z-index:99999; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:20px;';
+          document.body.appendChild(el);
+        }
+        el.innerHTML = `
+          <div style="max-width: 480px; background: rgba(30, 41, 59, 0.9); border: 1px solid rgba(255,255,255,0.15); padding: 32px 24px; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.5);">
+            <i class="fas fa-tools" style="font-size: 3rem; color: #F5820A; margin-bottom: 16px;"></i>
+            <h2 style="font-size: 1.5rem; color: #34D399; margin-bottom: 12px; font-weight: 800;">Site Under Maintenance</h2>
+            <p style="font-size: 0.95rem; line-height: 1.6; color: #E2E8F0; margin-bottom: 20px;">
+              ${settings.maintenance.message || 'সাইট রক্ষণাবেক্ষণ চলছে, শীঘ্রই ফিরে আসছি'}
+            </p>
+            <a href="admin.html" style="font-size: 0.8rem; color: #94A3B8; text-decoration: underline;">Admin Login</a>
+          </div>
+        `;
+        document.body.style.overflow = 'hidden';
+      } else if (overlay) {
+        overlay.remove();
+        document.body.style.overflow = '';
+      }
+    } else if (overlay) {
+      overlay.remove();
+      document.body.style.overflow = '';
+    }
+
+    // 2. Branding (Logo & Favicon)
+    if (settings.branding?.logoUrl) {
+      document.querySelectorAll('.logo-img, .auth-loading-logo, .logo-container img').forEach(img => {
+        img.src = settings.branding.logoUrl;
+      });
+    }
+
+    if (settings.branding?.faviconUrl) {
+      let iconLink = document.querySelector('link[rel="icon"]');
+      if (!iconLink) {
+        iconLink = document.createElement('link');
+        iconLink.rel = 'icon';
+        document.head.appendChild(iconLink);
+      }
+      iconLink.href = settings.branding.faviconUrl;
+
+      let appleLink = document.querySelector('link[rel="apple-touch-icon"]');
+      if (appleLink) {
+        appleLink.href = settings.branding.faviconUrl;
+      }
+    }
+
+    // 3. Social & Contact Links
+    if (settings.social) {
+      const { facebookUrl, whatsappNumber, telegramUrl } = settings.social;
+
+      if (whatsappNumber) {
+        const cleanWa = whatsappNumber.replace(/[^0-9]/g, '');
+        const fullWa = cleanWa.startsWith('88') ? cleanWa : `88${cleanWa}`;
+        document.querySelectorAll('a[href*="wa.me"]').forEach(link => {
+          link.href = `https://wa.me/${fullWa}`;
+          if (link.textContent && link.textContent.trim().match(/^[0-9+]+$/)) {
+            link.textContent = whatsappNumber;
+          }
+        });
+      }
+
+      if (facebookUrl) {
+        document.querySelectorAll('a[href*="facebook.com"]').forEach(link => {
+          link.href = facebookUrl;
+        });
+      }
+
+      if (telegramUrl) {
+        document.querySelectorAll('a[href*="t.me"]').forEach(link => {
+          if (!link.href.includes('shsaripofficial')) {
+            link.href = telegramUrl;
+          }
+        });
+      }
+    }
+
+    // 4. SEO Settings (Homepage Title & Meta Description)
+    if (settings.seo && (currentPath === 'index.html' || currentPath === '')) {
+      if (settings.seo.metaTitle) {
+        document.title = settings.seo.metaTitle;
+      }
+      if (settings.seo.metaDescription) {
+        let metaDesc = document.querySelector('meta[name="description"]');
+        if (!metaDesc) {
+          metaDesc = document.createElement('meta');
+          metaDesc.name = 'description';
+          document.head.appendChild(metaDesc);
+        }
+        metaDesc.content = settings.seo.metaDescription;
+      }
+    }
+
+    // 5. Analytics (Google Analytics & Facebook Pixel Injection)
+    if (settings.analytics?.googleAnalyticsId && !window.gaInjected) {
+      window.gaInjected = true;
+      const gaScript = document.createElement('script');
+      gaScript.async = true;
+      gaScript.src = `https://www.googletagmanager.com/gtag/js?id=${settings.analytics.googleAnalyticsId}`;
+      document.head.appendChild(gaScript);
+
+      const gtagConfig = document.createElement('script');
+      gtagConfig.textContent = `
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', '${settings.analytics.googleAnalyticsId}');
+      `;
+      document.head.appendChild(gtagConfig);
+    }
+
+    if (settings.analytics?.facebookPixelId && !window.fbPixelInjected) {
+      window.fbPixelInjected = true;
+      const fbScript = document.createElement('script');
+      fbScript.textContent = `
+        !function(f,b,e,v,n,t,s)
+        {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+        n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+        n.queue=[];t=b.createElement(e);t.async=!0;
+        t.src=v;s=b.getElementsByTagName(e)[0];
+        s.parentNode.insertBefore(t,s)}(window, document,'script',
+        'https://connect.facebook.net/en_US/fbevents.js');
+        fbq('init', '${settings.analytics.facebookPixelId}');
+        fbq('track', 'PageView');
+      `;
+      document.head.appendChild(fbScript);
+    }
+
+    // 6. Site Policies Rendering
+    if (settings.policies) {
+      if (currentPath === 'return-policy.html' && settings.policies.returnPolicyHtml) {
+        const policyContainer = document.querySelector('.section-wrapper .glass-card');
+        if (policyContainer) {
+          policyContainer.innerHTML = `
+            <h2 style="color: var(--primary-color); margin-bottom: 16px; font-size: 1.25rem; border-bottom: 2px solid var(--accent-color); padding-bottom: 6px; display: inline-block;">
+              <i class="fas fa-undo" style="color: var(--accent-color);"></i> Return & Refund Policy
+            </h2>
+            <div style="line-height: 1.7; font-size: 0.95rem; white-space: pre-line;">${settings.policies.returnPolicyHtml}</div>
+          `;
+        }
+      } else if (currentPath === 'shipping-policy.html' && settings.policies.shippingPolicyHtml) {
+        const policyContainer = document.querySelector('.section-wrapper .glass-card');
+        if (policyContainer) {
+          policyContainer.innerHTML = `
+            <h2 style="color: var(--primary-color); margin-bottom: 16px; font-size: 1.25rem; border-bottom: 2px solid var(--accent-color); padding-bottom: 6px; display: inline-block;">
+              <i class="fas fa-truck" style="color: var(--accent-color);"></i> Shipping & Delivery Information
+            </h2>
+            <div style="line-height: 1.7; font-size: 0.95rem; white-space: pre-line;">${settings.policies.shippingPolicyHtml}</div>
+          `;
+        }
+      } else if (currentPath === 'privacy-policy.html' && settings.policies.privacyPolicyHtml) {
+        const policyContainer = document.querySelector('.section-wrapper .glass-card');
+        if (policyContainer) {
+          policyContainer.innerHTML = `
+            <h2 style="color: var(--primary-color); margin-bottom: 16px; font-size: 1.25rem; border-bottom: 2px solid var(--accent-color); padding-bottom: 6px; display: inline-block;">
+              <i class="fas fa-user-shield" style="color: var(--accent-color);"></i> Privacy Policy
+            </h2>
+            <div style="line-height: 1.7; font-size: 0.95rem; white-space: pre-line;">${settings.policies.privacyPolicyHtml}</div>
+          `;
+        }
+      }
+    }
+
+  } catch (err) {
+    console.warn('Error applying global store settings:', err);
+  }
+}
+
 // Initializer on Page Load
 async function initApp() {
   initTheme();
@@ -723,8 +906,11 @@ async function initApp() {
   updateCartUI();
   renderDrawer();
 
+  applyGlobalStoreSettings();
+
   onAuthStateUpdate(() => {
     renderDrawer();
+    applyGlobalStoreSettings();
   });
 
   const copyrightYearEl = document.getElementById('copyright-year');
