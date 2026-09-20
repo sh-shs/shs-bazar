@@ -306,9 +306,7 @@ export async function fetchProductBySlugOrId(identifier) {
 
 export function getProductShareUrl(identifier) {
   if (!identifier) return window.location.href;
-  const base = window.location.href.split('?')[0].split('#')[0];
-  const directory = base.substring(0, base.lastIndexOf('/') + 1);
-  return `${directory}product-detail.html?id=${encodeURIComponent(identifier)}`;
+  return `${window.location.origin}/p/${encodeURIComponent(identifier)}`;
 }
 
 export const DEFAULT_BANNERS = [
