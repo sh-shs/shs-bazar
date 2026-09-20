@@ -701,7 +701,7 @@
         const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
         const district = distSelect.value;
-        const deliveryCharge = calculateDeliveryCharge(district);
+        const deliveryCharge = calculateDeliveryCharge(district, subtotal);
         const grandTotal = Math.max(0, subtotal + deliveryCharge - appliedDiscount);
 
         const bkashModalAmount = document.getElementById('bkash-modal-amount');

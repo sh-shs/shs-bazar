@@ -394,6 +394,190 @@
         </form>
       </div>
 
+      <!-- 1. Store Branding (Logo & Favicon) -->
+      <div class="admin-section-card">
+        <div class="admin-section-header">
+          <h3 class="admin-section-title"><i class="fas fa-palette"></i> Store Branding (Logo & Favicon)</h3>
+        </div>
+        <form id="adm-branding-form">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;">
+            <div class="form-group">
+              <label class="form-label">Header Logo Image URL or Upload</label>
+              <input type="text" id="brand-logo-url" class="form-control" placeholder="https://example.com/logo.png" style="margin-bottom: 6px;">
+              <input type="file" id="brand-logo-file" class="form-control" accept="image/*">
+              <small style="color: var(--text-muted); font-size: 0.75rem; display: block; margin-top: 4px;">Cloudinary-তে আপলোড হবে। সাইটের হেডার লোগো বদলে যাবে।</small>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Favicon Image URL or Upload</label>
+              <input type="text" id="brand-favicon-url" class="form-control" placeholder="https://example.com/favicon.png" style="margin-bottom: 6px;">
+              <input type="file" id="brand-favicon-file" class="form-control" accept="image/*">
+              <small style="color: var(--text-muted); font-size: 0.75rem; display: block; margin-top: 4px;">ব্রাউজার ট্যাবের আইকন হিসেবে দেখাবে।</small>
+            </div>
+          </div>
+          <button type="submit" id="adm-branding-submit-btn" class="btn-primary" style="border-radius: 10px; padding: 10px 20px;">Save Store Branding</button>
+        </form>
+      </div>
+
+      <!-- 2. Social Media & Contact Links -->
+      <div class="admin-section-card">
+        <div class="admin-section-header">
+          <h3 class="admin-section-title"><i class="fas fa-share-alt"></i> Social Media & Contact Links</h3>
+        </div>
+        <form id="adm-social-form">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;">
+            <div class="form-group">
+              <label class="form-label"><i class="fab fa-facebook" style="color:#1877F2;"></i> Facebook Page URL</label>
+              <input type="text" id="social-fb-url" class="form-control" value="https://facebook.com/shsbazarofficial">
+            </div>
+            <div class="form-group">
+              <label class="form-label"><i class="fab fa-whatsapp" style="color:#25D366;"></i> WhatsApp Contact Number</label>
+              <input type="text" id="social-wa-num" class="form-control" value="01342697743" placeholder="e.g. 01342697743">
+              <small style="color: var(--text-muted); font-size: 0.75rem;">যোগাযোগের জন্য আলাদা হোয়াটসঅ্যাপ নম্বর</small>
+            </div>
+            <div class="form-group">
+              <label class="form-label"><i class="fab fa-telegram" style="color:#29B6F6;"></i> Telegram Channel URL</label>
+              <input type="text" id="social-tg-url" class="form-control" value="https://t.me/shsbazarofficial">
+            </div>
+          </div>
+          <button type="submit" class="btn-primary" style="border-radius: 10px; padding: 10px 20px;">Save Social & Contact Links</button>
+        </form>
+      </div>
+
+      <!-- 3. Order Settings -->
+      <div class="admin-section-card">
+        <div class="admin-section-header">
+          <h3 class="admin-section-title"><i class="fas fa-shopping-cart"></i> Order Settings</h3>
+        </div>
+        <form id="adm-order-form">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;">
+            <div class="form-group">
+              <label class="form-label">Minimum Order Amount (৳)</label>
+              <input type="number" id="ord-min-amount" class="form-control" value="0" min="0" placeholder="0 = No limit">
+              <small style="color: var(--text-muted); font-size: 0.75rem;">এর নিচে কাস্টমার অর্ডার করতে পারবে না।</small>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Free Delivery Threshold (৳)</label>
+              <input type="number" id="ord-free-threshold" class="form-control" value="0" min="0" placeholder="e.g. 1000">
+              <small style="color: var(--text-muted); font-size: 0.75rem;">এই পরিমাণের বেশি অর্ডারে ডেলিভারি ফ্রি হবে।</small>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Invoice Prefix</label>
+              <input type="text" id="ord-inv-prefix" class="form-control" value="SHS-" placeholder="e.g. SHS-">
+              <small style="color: var(--text-muted); font-size: 0.75rem;">ইনভয়েস নম্বরের আগে বসবে (যেমন: SHS-1001)</small>
+            </div>
+          </div>
+          <div class="form-group" style="margin-top: 4px;">
+            <label style="display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 0.9rem; cursor: pointer;">
+              <input type="checkbox" id="ord-free-toggle"> Enable Free Delivery Threshold
+            </label>
+          </div>
+          <button type="submit" class="btn-primary" style="border-radius: 10px; padding: 10px 20px;">Save Order Settings</button>
+        </form>
+      </div>
+
+      <!-- 4. Site Policies (Text / HTML Editor) -->
+      <div class="admin-section-card">
+        <div class="admin-section-header">
+          <h3 class="admin-section-title"><i class="fas fa-file-alt"></i> Site Policies Content</h3>
+        </div>
+        <form id="adm-policies-form">
+          <div class="form-group">
+            <label class="form-label">Return & Refund Policy Content</label>
+            <textarea id="policy-return-text" class="form-control" rows="4" placeholder="রিটার্ন ও রিফান্ড নীতিমালা এখানে লিখুন..."></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Shipping & Delivery Info Content</label>
+            <textarea id="policy-shipping-text" class="form-control" rows="4" placeholder="শিপিং ও ডেলিভারি তথ্য এখানে লিখুন..."></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Privacy Policy Content</label>
+            <textarea id="policy-privacy-text" class="form-control" rows="4" placeholder="প্রাইভেসি পলিসি এখানে লিখুন..."></textarea>
+          </div>
+          <button type="submit" class="btn-primary" style="border-radius: 10px; padding: 10px 20px;">Save Site Policies</button>
+        </form>
+      </div>
+
+      <!-- 5. Maintenance Mode -->
+      <div class="admin-section-card">
+        <div class="admin-section-header">
+          <h3 class="admin-section-title"><i class="fas fa-tools"></i> Maintenance Mode</h3>
+        </div>
+        <form id="adm-maintenance-form">
+          <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 0.95rem; cursor: pointer;">
+              <input type="checkbox" id="maint-toggle"> Enable Maintenance Mode (সাইট রক্ষণাবেক্ষণ মোড চালু করুন)
+            </label>
+            <small style="color: var(--text-muted); font-size: 0.78rem; margin-top: 4px;">চালু থাকলে সাধারণ কাস্টমার সাইট দেখতে পারবে না, তবে Admin Panel সচল থাকবে।</small>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Maintenance Message</label>
+            <textarea id="maint-message" class="form-control" rows="2" placeholder="সাইট রক্ষণাবেক্ষণ চলছে, শীঘ্রই ফিরে আসছি">সাইট রক্ষণাবেক্ষণ চলছে, শীঘ্রই ফিরে আসছি</textarea>
+          </div>
+          <button type="submit" class="btn-primary" style="border-radius: 10px; padding: 10px 20px;">Save Maintenance Settings</button>
+        </form>
+      </div>
+
+      <!-- 6. Admin / Staff Management -->
+      <div class="admin-section-card">
+        <div class="admin-section-header">
+          <h3 class="admin-section-title"><i class="fas fa-user-shield"></i> Admin & Staff Account Management</h3>
+        </div>
+        <form id="adm-staff-form">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;">
+            <div class="form-group">
+              <label class="form-label">Registered User Email *</label>
+              <input type="email" id="staff-email-input" class="form-control" placeholder="user@gmail.com" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Assign Role *</label>
+              <select id="staff-role-select" class="form-control" required>
+                <option value="admin">Admin / Staff</option>
+                <option value="customer">Customer</option>
+              </select>
+            </div>
+          </div>
+          <button type="submit" id="staff-update-btn" class="btn-primary" style="border-radius: 10px; padding: 10px 20px;">Update User Role</button>
+        </form>
+      </div>
+
+      <!-- 7. SEO Settings -->
+      <div class="admin-section-card">
+        <div class="admin-section-header">
+          <h3 class="admin-section-title"><i class="fas fa-search"></i> SEO Settings</h3>
+        </div>
+        <form id="adm-seo-form">
+          <div class="form-group">
+            <label class="form-label">Homepage Meta Title</label>
+            <input type="text" id="seo-meta-title" class="form-control" value="SHS Bazar - Online Shopping in Kushtia">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Homepage Meta Description</label>
+            <textarea id="seo-meta-desc" class="form-control" rows="2" placeholder="SHS Bazar offers online shopping in Kushtia, Bangladesh."></textarea>
+          </div>
+          <button type="submit" class="btn-primary" style="border-radius: 10px; padding: 10px 20px;">Save SEO Settings</button>
+        </form>
+      </div>
+
+      <!-- 8. Analytics -->
+      <div class="admin-section-card">
+        <div class="admin-section-header">
+          <h3 class="admin-section-title"><i class="fas fa-chart-bar"></i> Tracking & Analytics Settings</h3>
+        </div>
+        <form id="adm-analytics-form">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;">
+            <div class="form-group">
+              <label class="form-label">Google Analytics Tracking ID (G-XXXXXXXXXX)</label>
+              <input type="text" id="analytics-ga-id" class="form-control" placeholder="G-XXXXXXXXXX">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Facebook Pixel ID</label>
+              <input type="text" id="analytics-fb-pixel" class="form-control" placeholder="123456789012345">
+            </div>
+          </div>
+          <button type="submit" class="btn-primary" style="border-radius: 10px; padding: 10px 20px;">Save Analytics Settings</button>
+        </form>
+      </div>
+
     </div>
 
     <!-- Section 9: Banners Management -->
@@ -727,6 +911,13 @@
       saveAdminDeliverySettings,
       saveAdminPaymentSettings,
       saveAdminGeneralSettings,
+      saveAdminBrandingSettings,
+      saveAdminSocialSettings,
+      saveAdminOrderSettings,
+      saveAdminPoliciesSettings,
+      saveAdminMaintenanceSettings,
+      saveAdminSeoSettings,
+      saveAdminAnalyticsSettings,
       generateCategorySlug,
       createCategory,
       updateCategory,
@@ -2400,6 +2591,56 @@
           const elEmail = document.getElementById('gen-support-email');
           if (elEmail) elEmail.value = adminState.settings.general.supportEmail || 'saripofficialsupport@gmail.com';
         }
+        if (adminState.settings.branding) {
+          const elLogoUrl = document.getElementById('brand-logo-url');
+          if (elLogoUrl) elLogoUrl.value = adminState.settings.branding.logoUrl || '';
+          const elFaviconUrl = document.getElementById('brand-favicon-url');
+          if (elFaviconUrl) elFaviconUrl.value = adminState.settings.branding.faviconUrl || '';
+        }
+        if (adminState.settings.social) {
+          const elFb = document.getElementById('social-fb-url');
+          if (elFb) elFb.value = adminState.settings.social.facebookUrl || 'https://facebook.com/shsbazarofficial';
+          const elWa = document.getElementById('social-wa-num');
+          if (elWa) elWa.value = adminState.settings.social.whatsappNumber || '01342697743';
+          const elTg = document.getElementById('social-tg-url');
+          if (elTg) elTg.value = adminState.settings.social.telegramUrl || 'https://t.me/shsbazarofficial';
+        }
+        if (adminState.settings.order) {
+          const elMin = document.getElementById('ord-min-amount');
+          if (elMin) elMin.value = adminState.settings.order.minOrderAmount ?? 0;
+          const elThreshold = document.getElementById('ord-free-threshold');
+          if (elThreshold) elThreshold.value = adminState.settings.order.freeDeliveryThreshold ?? 0;
+          const elToggle = document.getElementById('ord-free-toggle');
+          if (elToggle) elToggle.checked = Boolean(adminState.settings.order.enableFreeDelivery);
+          const elPrefix = document.getElementById('ord-inv-prefix');
+          if (elPrefix) elPrefix.value = adminState.settings.order.invoicePrefix || 'SHS-';
+        }
+        if (adminState.settings.policies) {
+          const elRet = document.getElementById('policy-return-text');
+          if (elRet) elRet.value = adminState.settings.policies.returnPolicyHtml || '';
+          const elShip = document.getElementById('policy-shipping-text');
+          if (elShip) elShip.value = adminState.settings.policies.shippingPolicyHtml || '';
+          const elPriv = document.getElementById('policy-privacy-text');
+          if (elPriv) elPriv.value = adminState.settings.policies.privacyPolicyHtml || '';
+        }
+        if (adminState.settings.maintenance) {
+          const elMaintToggle = document.getElementById('maint-toggle');
+          if (elMaintToggle) elMaintToggle.checked = Boolean(adminState.settings.maintenance.enabled);
+          const elMaintMsg = document.getElementById('maint-message');
+          if (elMaintMsg) elMaintMsg.value = adminState.settings.maintenance.message || 'সাইট রক্ষণাবেক্ষণ চলছে, শীঘ্রই ফিরে আসছি';
+        }
+        if (adminState.settings.seo) {
+          const elTitle = document.getElementById('seo-meta-title');
+          if (elTitle) elTitle.value = adminState.settings.seo.metaTitle || 'SHS Bazar - Online Shopping in Kushtia';
+          const elDesc = document.getElementById('seo-meta-desc');
+          if (elDesc) elDesc.value = adminState.settings.seo.metaDescription || '';
+        }
+        if (adminState.settings.analytics) {
+          const elGa = document.getElementById('analytics-ga-id');
+          if (elGa) elGa.value = adminState.settings.analytics.googleAnalyticsId || '';
+          const elFbPixel = document.getElementById('analytics-fb-pixel');
+          if (elFbPixel) elFbPixel.value = adminState.settings.analytics.facebookPixelId || '';
+        }
       } catch (err) {
         console.error('Error loading settings data:', err);
         adminState.settings = {};
@@ -2432,6 +2673,126 @@
         supportEmail: document.getElementById('gen-support-email').value.trim()
       });
       showToast('General Settings Saved');
+    });
+
+    document.getElementById('adm-branding-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const submitBtn = document.getElementById('adm-branding-submit-btn');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Uploading & Saving...';
+
+      try {
+        let logoUrl = document.getElementById('brand-logo-url').value.trim();
+        let faviconUrl = document.getElementById('brand-favicon-url').value.trim();
+
+        const logoFile = document.getElementById('brand-logo-file').files[0];
+        if (logoFile) {
+          const uploadedLogo = await uploadMediaFile(logoFile, 'branding');
+          if (uploadedLogo) logoUrl = uploadedLogo;
+        }
+
+        const faviconFile = document.getElementById('brand-favicon-file').files[0];
+        if (faviconFile) {
+          const uploadedFavicon = await uploadMediaFile(faviconFile, 'branding');
+          if (uploadedFavicon) faviconUrl = uploadedFavicon;
+        }
+
+        document.getElementById('brand-logo-url').value = logoUrl;
+        document.getElementById('brand-favicon-url').value = faviconUrl;
+
+        await saveAdminBrandingSettings({ logoUrl, faviconUrl });
+        showToast('Store Branding Settings Saved');
+      } catch (err) {
+        console.error('Error saving branding settings:', err);
+        showToast('Branding settings save error: ' + (err.message || 'Upload error'));
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Save Store Branding';
+      }
+    });
+
+    document.getElementById('adm-social-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      await saveAdminSocialSettings({
+        facebookUrl: document.getElementById('social-fb-url').value.trim(),
+        whatsappNumber: document.getElementById('social-wa-num').value.trim(),
+        telegramUrl: document.getElementById('social-tg-url').value.trim()
+      });
+      showToast('Social Media Links Saved');
+    });
+
+    document.getElementById('adm-order-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      await saveAdminOrderSettings({
+        minOrderAmount: document.getElementById('ord-min-amount').value,
+        freeDeliveryThreshold: document.getElementById('ord-free-threshold').value,
+        enableFreeDelivery: document.getElementById('ord-free-toggle').checked,
+        invoicePrefix: document.getElementById('ord-inv-prefix').value.trim()
+      });
+      showToast('Order Settings Saved');
+    });
+
+    document.getElementById('adm-policies-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      await saveAdminPoliciesSettings({
+        returnPolicyHtml: document.getElementById('policy-return-text').value.trim(),
+        shippingPolicyHtml: document.getElementById('policy-shipping-text').value.trim(),
+        privacyPolicyHtml: document.getElementById('policy-privacy-text').value.trim()
+      });
+      showToast('Site Policies Saved');
+    });
+
+    document.getElementById('adm-maintenance-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      await saveAdminMaintenanceSettings({
+        enabled: document.getElementById('maint-toggle').checked,
+        message: document.getElementById('maint-message').value.trim()
+      });
+      showToast('Maintenance Mode Settings Saved');
+    });
+
+    document.getElementById('adm-staff-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('staff-email-input').value.trim().toLowerCase();
+      const role = document.getElementById('staff-role-select').value;
+
+      if (!email) {
+        showToast('Please enter a user email');
+        return;
+      }
+
+      const foundUser = (adminState.customers || []).find(c => (c.email || '').toLowerCase().trim() === email);
+      if (foundUser) {
+        await updateUserProfile(foundUser.id, { role });
+        showToast(`User ${email} updated to role "${role}"`);
+        await loadUsersData();
+      } else {
+        showToast(`User with email "${email}" not found in registered accounts. Highlighting customer table search.`);
+        const custSearch = document.getElementById('cust-search');
+        if (custSearch) {
+          switchAdminTab('customers');
+          custSearch.value = email;
+          window.renderCustomersTable();
+        }
+      }
+    });
+
+    document.getElementById('adm-seo-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      await saveAdminSeoSettings({
+        metaTitle: document.getElementById('seo-meta-title').value.trim(),
+        metaDescription: document.getElementById('seo-meta-desc').value.trim()
+      });
+      showToast('SEO Settings Saved');
+    });
+
+    document.getElementById('adm-analytics-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      await saveAdminAnalyticsSettings({
+        googleAnalyticsId: document.getElementById('analytics-ga-id').value.trim(),
+        facebookPixelId: document.getElementById('analytics-fb-pixel').value.trim()
+      });
+      showToast('Analytics Settings Saved');
     });
 
     // -------------------------------------------------------------

@@ -2,7 +2,9 @@
 export function generatePDFInvoice(order) {
   if (!order) return;
 
-  const orderId = order.id || 'N/A';
+  const rawId = order.id || 'N/A';
+  const prefix = order.invoicePrefix || 'SHS-';
+  const orderId = rawId.startsWith(prefix) ? rawId : `${prefix}${rawId}`;
   const cleanId = orderId.replace(/[^a-zA-Z0-9]/g, '');
 
   let orderDateStr = 'N/A';
