@@ -7,10 +7,11 @@ export const FALLBACK_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.or
 export function getOptimizedImageUrl(url, width = 300, quality = 'auto') {
   if (!url || typeof url !== 'string') return FALLBACK_IMAGE;
   if (url.includes('cloudinary.com') && url.includes('/upload/')) {
-    if (url.includes('/f_auto,q_auto') || url.includes('/w_')) {
+    // If transformations are already present, preserve or update them cleanly
+    if (url.includes('/f_auto') || url.includes('/w_') || url.includes('/q_')) {
       return url;
     }
-    const params = `f_auto,q_${quality},w_${width}`;
+    const params = `f_auto,q_${quality},w_${width},c_limit`;
     return url.replace('/upload/', `/upload/${params}/`);
   }
   return url;

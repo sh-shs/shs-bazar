@@ -41,17 +41,34 @@ function notifyAuthStateListeners() {
   authStateListeners.forEach(cb => cb(currentUser, userProfile));
 }
 
+// Safety fallback timeout to resolve auth state if Firebase takes too long
+const authTimeoutId = setTimeout(() => {
+  if (!isAuthResolved) {
+    console.warn('[Auth] Safety timeout reached (10s), forcing auth state resolution.');
+    isAuthResolved = true;
+    updateHeaderAuthUI();
+    notifyAuthStateListeners();
+  }
+}, 10000);
+
 // Initialize Auth Listener
 onAuthStateChanged(auth, async (user) => {
+  clearTimeout(authTimeoutId);
   currentUser = user;
   if (user) {
     const userEmailLower = (user.email || '').toLowerCase();
     const isSuperAdmin = SUPER_ADMIN_EMAILS.some(email => email.toLowerCase() === userEmailLower);
 
-    // Fetch user profile document from Firestore
+    // Fetch user profile document from Firestore with 5s timeout
     const userDocRef = doc(db, 'users', user.uid);
     try {
-      let snap = await getDoc(userDocRef);
+      let timeoutId;
+      const getProfilePromise = getDoc(userDocRef);
+      const profileTimeoutPromise = new Promise((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error('User profile fetch timeout')), 5000);
+      });
+
+      let snap = await Promise.race([getProfilePromise, profileTimeoutPromise]).finally(() => clearTimeout(timeoutId));
 
       if (!snap.exists()) {
         // Create user record if missing
@@ -64,23 +81,23 @@ onAuthStateChanged(auth, async (user) => {
           wishlist: [],
           createdAt: serverTimestamp()
         };
-        await setDoc(userDocRef, initialData);
+        setDoc(userDocRef, initialData).catch(err => console.warn('Error creating user doc:', err));
         userProfile = initialData;
       } else {
         userProfile = snap.data();
         // Ensure super admin role is enforced
         if (isSuperAdmin && userProfile.role !== 'admin') {
-          await updateDoc(userDocRef, { role: 'admin' });
+          updateDoc(userDocRef, { role: 'admin' }).catch(err => console.warn('Error setting superadmin role:', err));
           userProfile.role = 'admin';
         }
       }
     } catch (err) {
       console.error('Error loading/creating user profile in Firestore:', err);
-      // Fallback profile object if network or permission error occurs
+      // Fallback profile object if network, timeout or permission error occurs
       userProfile = {
         uid: user.uid,
         email: user.email || '',
-        displayName: user.displayName || 'User',
+        displayName: user.displayName || (user.email ? user.email.split('@')[0] : 'User'),
         role: isSuperAdmin ? 'admin' : 'customer',
         wishlist: []
       };
