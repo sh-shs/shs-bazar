@@ -494,16 +494,24 @@ export async function uploadMediaFile(file, folderPath = 'products/images', time
     uploadFile = file;
   }
 
+  const cloudName = 'vhc6a9gy';
+  const uploadPreset = 'Bangla Bazar';
+
   const formData = new FormData();
   formData.append('file', uploadFile);
-  formData.append('upload_preset', 'Bangla Bazar');
+  formData.append('upload_preset', uploadPreset);
   if (folderPath) {
     formData.append('folder', folderPath);
   }
 
   const isVideo = uploadFile.type && uploadFile.type.startsWith('video');
   const resourceType = isVideo ? 'video' : 'image';
-  const endpoint = `https://api.cloudinary.com/v1_1/vhc6a9gy/${resourceType}/upload`;
+  const endpoint = `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`;
+
+  console.log(`Cloudinary Upload Request Config:
+  - CLOUDINARY_CLOUD_NAME: "${cloudName}"
+  - CLOUDINARY_UPLOAD_PRESET: "${uploadPreset}"
+  - Endpoint: "${endpoint}"`);
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
@@ -523,7 +531,8 @@ export async function uploadMediaFile(file, folderPath = 'products/images', time
       return resData.secure_url;
     }
 
-    const errorMsg = resData.error?.message || `Cloudinary HTTP error ${res.status}`;
+    const errorMsg = resData.error?.message || (typeof resData === 'object' && Object.keys(resData).length ? JSON.stringify(resData) : `Cloudinary HTTP error ${res.status}`);
+    console.error('Cloudinary upload API error response FULL BODY:', JSON.stringify(resData, null, 2));
     console.error('Cloudinary upload API error response:', { status: res.status, errorMsg, resData });
     throw new Error(errorMsg);
   } catch (e) {

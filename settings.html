@@ -848,7 +848,8 @@
             }
           } catch (photoUploadErr) {
             console.error('Profile photo upload error:', photoUploadErr);
-            alert('ছবি আপলোড ব্যর্থ হয়েছে, আবার চেষ্টা করুন (' + (photoUploadErr.message || 'Cloudinary error') + ')');
+            const rawErrMsg = photoUploadErr.message || 'Cloudinary error';
+            alert('Photo upload failed: ' + rawErrMsg);
             saveBtn.disabled = false;
             saveBtn.innerHTML = 'Save Changes';
             return;
