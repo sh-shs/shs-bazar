@@ -171,7 +171,7 @@ export function openShareModal() {
     <div class="share-modal-card">
       <button class="bkash-close-btn" onclick="closeShareModal()"><i class="fas fa-times"></i></button>
       <div style="text-align: center; margin-bottom: 12px;">
-        <img src="assets/images/logo.png" style="height: 48px; border-radius: 8px;" alt="Logo">
+        <img src="assets/images/logo.png" style="height: 48px; border-radius: 8px;" alt="Logo" loading="lazy">
         <h3 style="color: var(--primary-color); font-size: 1.2rem; margin-top: 6px;">Share SHS Bazar</h3>
         <p style="font-size: 0.82rem; color: var(--text-muted);">Spread the word with friends & family in Kushtia!</p>
       </div>
@@ -258,7 +258,7 @@ export function openImageModal(imageUrl) {
   modal.innerHTML = `
     <div class="share-modal-card" style="max-width: 90vw; max-height: 90vh; padding: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(15, 23, 42, 0.95); border: 1px solid var(--border-color);">
       <button class="bkash-close-btn" onclick="closeImageModal()" style="top: 10px; right: 10px; background: rgba(255,255,255,0.2); color: #FFF; z-index: 10;"><i class="fas fa-times"></i></button>
-      <img src="${imageUrl}" style="max-width: 100%; max-height: 82vh; object-fit: contain; border-radius: 8px;">
+      <img src="${imageUrl}" style="max-width: 100%; max-height: 82vh; object-fit: contain; border-radius: 8px;" loading="lazy">
     </div>
   `;
 
@@ -319,7 +319,7 @@ export function renderDrawer() {
   drawer.innerHTML = `
     <div class="drawer-header">
       <div class="logo-container">
-        <img src="assets/images/logo.png" alt="SHS Bazar Logo" class="logo-img">
+        <img src="assets/images/logo.png" alt="SHS Bazar Logo" class="logo-img" loading="lazy">
         <span class="brand-name">SHS Bazar</span>
       </div>
       <button class="hamburger-btn" onclick="toggleDrawer()"><i class="fas fa-times"></i></button>
@@ -906,13 +906,6 @@ async function initApp() {
   updateCartUI();
   renderDrawer();
 
-  applyGlobalStoreSettings();
-
-  onAuthStateUpdate(() => {
-    renderDrawer();
-    applyGlobalStoreSettings();
-  });
-
   const copyrightYearEl = document.getElementById('copyright-year');
   if (copyrightYearEl) {
     copyrightYearEl.textContent = new Date().getFullYear();
@@ -930,64 +923,48 @@ async function initApp() {
     }
   }
 
-  // If on homepage, render catalog sections
+  // Fire off non-blocking global store settings fetch in parallel
+  applyGlobalStoreSettings().catch(err => console.warn('Error applying global store settings:', err));
+
+  onAuthStateUpdate(() => {
+    renderDrawer();
+    applyGlobalStoreSettings().catch(err => console.warn('Error in auth update store settings:', err));
+  });
+
+  // If on homepage, load categories, banners, and products in parallel
   const trendingGrid = document.getElementById('trending-products');
   if (trendingGrid) {
-    // 1. Render categories from Firestore without hardcoded defaults
     const catGrid = document.getElementById('category-grid');
-    if (catGrid) {
-      catGrid.innerHTML = '';
+    const allProductsGrid = document.getElementById('all-products');
 
-      const renderCategoriesUI = (cats) => {
-        if (cats && cats.length > 0) {
-          catGrid.innerHTML = cats.map(cat => {
-            const catImgSrc = getValidCategoryImageUrl(cat.image, cat.name, cat.slug || cat.id);
-            const safeCatName = (cat.name || 'Category').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-            const safeCatId = encodeURIComponent(cat.id || cat.slug || '');
-            return `
-              <div class="category-card" onclick="window.location.href='shop.html?category=${safeCatId}'">
-                <div class="category-icon-box">
-                  <img src="${catImgSrc}" alt="${safeCatName}" loading="lazy" class="category-img">
-                </div>
-                <span class="category-name">${cat.name || ''}</span>
-              </div>
-            `;
-          }).join('');
-        } else {
-          catGrid.innerHTML = '';
-        }
-      };
-
-      fetchActiveCategories().then(renderCategoriesUI).catch(err => console.warn('Error loading active categories:', err));
-
-      const unsubscribeCategories = subscribeToActiveCategories(
-        (updatedCats) => {
-          renderCategoriesUI(updatedCats);
-        },
-        (err) => console.warn('[Realtime Categories Error]:', err)
-      );
-
-      window.addEventListener('beforeunload', () => {
-        if (typeof unsubscribeCategories === 'function') unsubscribeCategories();
-      });
-    }
-
-    // Initialize carousel immediately with default local banners
+    if (catGrid) catGrid.innerHTML = '';
     initCarousel(DEFAULT_BANNERS);
 
-    // 2. Fetch remote banners asynchronously without blocking static components
-    fetchBanners().then(banners => {
-      if (banners && banners.length > 0) {
-        initCarousel(banners);
-      }
-    }).catch(err => console.warn('Banner fetch error:', err));
-
-    // Show skeletons immediately during initial loading
-    const allProductsGrid = document.getElementById('all-products');
     trendingGrid.innerHTML = renderSkeletonCards(4);
     if (allProductsGrid) {
       allProductsGrid.innerHTML = renderSkeletonCards(8);
     }
+
+    const renderCategoriesUI = (cats) => {
+      if (!catGrid) return;
+      if (cats && cats.length > 0) {
+        catGrid.innerHTML = cats.map(cat => {
+          const catImgSrc = getValidCategoryImageUrl(cat.image, cat.name, cat.slug || cat.id);
+          const safeCatName = (cat.name || 'Category').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+          const safeCatId = encodeURIComponent(cat.id || cat.slug || '');
+          return `
+            <div class="category-card" onclick="window.location.href='shop.html?category=${safeCatId}'">
+              <div class="category-icon-box">
+                <img src="${catImgSrc}" alt="${safeCatName}" loading="lazy" class="category-img">
+              </div>
+              <span class="category-name">${cat.name || ''}</span>
+            </div>
+          `;
+        }).join('');
+      } else {
+        catGrid.innerHTML = '';
+      }
+    };
 
     let isSnapshotActive = false;
     let unsubscribeProducts = null;
@@ -997,7 +974,6 @@ async function initApp() {
       const lang = getCurrentLang();
       const t = TRANSLATIONS[lang] || TRANSLATIONS.en;
 
-      // Trending Grid
       const trendingProducts = products.filter(p => p.isTrending);
       if (trendingProducts.length > 0) {
         trendingGrid.innerHTML = trendingProducts.map(renderProductCard).join('');
@@ -1005,7 +981,6 @@ async function initApp() {
         trendingGrid.innerHTML = renderEmptyState(t.noTrendingProducts || 'বর্তমানে কোনো ট্রেন্ডিং প্রোডাক্ট নেই');
       }
 
-      // All Products grid - display all products directly
       if (allProductsGrid) {
         if (products.length > 0) {
           allProductsGrid.innerHTML = products.map(renderProductCard).join('');
@@ -1015,30 +990,52 @@ async function initApp() {
       }
     };
 
-    const loadHomepageProducts = async () => {
-      trendingGrid.innerHTML = renderSkeletonCards(4);
-      if (allProductsGrid) {
-        allProductsGrid.innerHTML = renderSkeletonCards(8);
+    let unsubscribeCategories = null;
+
+    window.addEventListener('beforeunload', () => {
+      if (typeof unsubscribeCategories === 'function') unsubscribeCategories();
+      if (typeof unsubscribeProducts === 'function') unsubscribeProducts();
+    });
+
+    // Parallel execution of initial data fetches
+    const loadHomepageDataParallel = async () => {
+      // Setup realtime listener subscriptions in background
+      if (!unsubscribeCategories) {
+        unsubscribeCategories = subscribeToActiveCategories(
+          (updatedCats) => renderCategoriesUI(updatedCats),
+          (err) => console.warn('[Realtime Categories Error]:', err)
+        );
       }
 
-      try {
-        const products = await fetchPublishedProducts(null, 3, 1000);
-        renderHomepageProductsUI(products);
+      // Parallel fetch for Categories, Banners, and Published Products
+      const [categoriesResult, bannersResult, productsResult] = await Promise.allSettled([
+        fetchActiveCategories(),
+        fetchBanners(),
+        fetchPublishedProducts(null, 3, 1000)
+      ]);
 
-        // Attach snapshot listener after initial fetch succeeds for real-time reactivity
+      if (categoriesResult.status === 'fulfilled' && categoriesResult.value) {
+        renderCategoriesUI(categoriesResult.value);
+      }
+
+      if (bannersResult.status === 'fulfilled' && bannersResult.value && bannersResult.value.length > 0) {
+        initCarousel(bannersResult.value);
+      }
+
+      if (productsResult.status === 'fulfilled' && productsResult.value) {
+        renderHomepageProductsUI(productsResult.value);
+
         if (!isSnapshotActive) {
           unsubscribeProducts = subscribeToPublishedProducts(
             (updatedProducts) => {
               isSnapshotActive = true;
               renderHomepageProductsUI(updatedProducts);
             },
-            (error) => {
-              console.warn('[Realtime Listener Error]:', error);
-            }
+            (error) => console.warn('[Realtime Listener Error]:', error)
           );
         }
-      } catch (err) {
-        console.error('[loadHomepageProducts Error]:', err);
+      } else {
+        console.error('[loadHomepageProducts Error]:', productsResult.reason);
         const lang = getCurrentLang();
         const t = TRANSLATIONS[lang] || TRANSLATIONS.en;
         const errorHtml = renderErrorState(t.errorLoadingProducts, 'window.retryFetchHomepageProducts()');
@@ -1050,16 +1047,10 @@ async function initApp() {
     };
 
     window.retryFetchHomepageProducts = () => {
-      loadHomepageProducts();
+      loadHomepageDataParallel();
     };
 
-    window.addEventListener('beforeunload', () => {
-      if (typeof unsubscribeProducts === 'function') {
-        unsubscribeProducts();
-      }
-    });
-
-    loadHomepageProducts();
+    loadHomepageDataParallel();
   }
 }
 

@@ -30,21 +30,57 @@ export function isSuperAdminUser(user, profile) {
 // -------------------------------------------------------------
 // 1. Settings CRUD Functions
 // -------------------------------------------------------------
-export async function fetchAdminSettings() {
-  const DEFAULT_AUTO_REPLY = "আসসালামু আলাইকুম স্যার/ম্যাম। আপনি কিছুক্ষণ অপেক্ষা করুন। আমাদের প্রতিনিধি আপনার সাথে শীঘ্রই যোগাযোগ করবে। ধন্যবাদ।";
+let cachedAdminSettings = null;
+
+export function clearAdminSettingsCache() {
+  cachedAdminSettings = null;
   try {
-    const [
-      deliverySnap,
-      paymentSnap,
-      generalSnap,
-      brandingSnap,
-      socialSnap,
-      orderSnap,
-      policiesSnap,
-      maintenanceSnap,
-      seoSnap,
-      analyticsSnap
-    ] = await Promise.all([
+    sessionStorage.removeItem('shs_cached_admin_settings');
+  } catch (e) {}
+}
+
+export async function fetchAdminSettings(forceRefresh = false) {
+  if (!forceRefresh && cachedAdminSettings) {
+    return cachedAdminSettings;
+  }
+  if (!forceRefresh) {
+    try {
+      const sessionData = sessionStorage.getItem('shs_cached_admin_settings');
+      if (sessionData) {
+        cachedAdminSettings = JSON.parse(sessionData);
+        if (cachedAdminSettings) return cachedAdminSettings;
+      }
+    } catch (e) {
+      console.warn('sessionStorage admin settings read error:', e);
+    }
+  }
+
+  const DEFAULT_AUTO_REPLY = "আসসালামু আলাইকুম স্যার/ম্যাম। আপনি কিছুক্ষণ অপেক্ষা করুন। আমাদের প্রতিনিধি আপনার সাথে শীঘ্রই যোগাযোগ করবে। ধন্যবাদ।";
+  const defaultSettings = {
+    delivery: { insideKushtia: 100, outsideKushtia: 160 },
+    payment: { bKashNumber: '01342697743', codEnabled: true },
+    general: {
+      siteName: 'SHS Bazar',
+      hotline: '+8809658183506',
+      supportEmail: 'saripofficialsupport@gmail.com',
+      autoReply: DEFAULT_AUTO_REPLY
+    },
+    branding: { logoUrl: '', faviconUrl: '' },
+    social: {
+      facebookUrl: 'https://facebook.com/shsbazarofficial',
+      whatsappNumber: '01342697743',
+      telegramUrl: 'https://t.me/shsbazarofficial'
+    },
+    order: { minOrderAmount: 0, freeDeliveryThreshold: 0, enableFreeDelivery: false, invoicePrefix: 'SHS-' },
+    policies: { returnPolicyHtml: '', shippingPolicyHtml: '', privacyPolicyHtml: '' },
+    maintenance: { enabled: false, message: 'সাইট রক্ষণাবেক্ষণ চলছে, শীঘ্রই ফিরে আসছি' },
+    seo: { metaTitle: 'SHS Bazar - Online Shopping in Kushtia', metaDescription: 'SHS Bazar offers online shopping in Kushtia, Bangladesh.' },
+    analytics: { googleAnalyticsId: '', facebookPixelId: '' }
+  };
+
+  try {
+    let timeoutId;
+    const fetchPromise = Promise.all([
       getDoc(doc(db, 'settings', 'delivery')),
       getDoc(doc(db, 'settings', 'payment')),
       getDoc(doc(db, 'settings', 'general')),
@@ -57,6 +93,23 @@ export async function fetchAdminSettings() {
       getDoc(doc(db, 'settings', 'analytics'))
     ]);
 
+    const timeoutPromise = new Promise((_, reject) => {
+      timeoutId = setTimeout(() => reject(new Error('Admin settings query timeout')), 5000);
+    });
+
+    const [
+      deliverySnap,
+      paymentSnap,
+      generalSnap,
+      brandingSnap,
+      socialSnap,
+      orderSnap,
+      policiesSnap,
+      maintenanceSnap,
+      seoSnap,
+      analyticsSnap
+    ] = await Promise.race([fetchPromise, timeoutPromise]).finally(() => clearTimeout(timeoutId));
+
     const generalData = generalSnap.exists() ? generalSnap.data() : {};
     const brandingData = brandingSnap.exists() ? brandingSnap.data() : {};
     const socialData = socialSnap.exists() ? socialSnap.data() : {};
@@ -66,79 +119,29 @@ export async function fetchAdminSettings() {
     const seoData = seoSnap.exists() ? seoSnap.data() : {};
     const analyticsData = analyticsSnap.exists() ? analyticsSnap.data() : {};
 
-    return {
-      delivery: deliverySnap.exists() ? deliverySnap.data() : { insideKushtia: 100, outsideKushtia: 160 },
-      payment: paymentSnap.exists() ? paymentSnap.data() : { bKashNumber: '01342697743', codEnabled: true },
-      general: {
-        siteName: 'SHS Bazar',
-        hotline: '+8809658183506',
-        supportEmail: 'saripofficialsupport@gmail.com',
-        autoReply: DEFAULT_AUTO_REPLY,
-        ...generalData
-      },
-      branding: {
-        logoUrl: '',
-        faviconUrl: '',
-        ...brandingData
-      },
-      social: {
-        facebookUrl: 'https://facebook.com/shsbazarofficial',
-        whatsappNumber: '01342697743',
-        telegramUrl: 'https://t.me/shsbazarofficial',
-        ...socialData
-      },
-      order: {
-        minOrderAmount: 0,
-        freeDeliveryThreshold: 0,
-        enableFreeDelivery: false,
-        invoicePrefix: 'SHS-',
-        ...orderData
-      },
-      policies: {
-        returnPolicyHtml: '',
-        shippingPolicyHtml: '',
-        privacyPolicyHtml: '',
-        ...policiesData
-      },
-      maintenance: {
-        enabled: false,
-        message: 'সাইট রক্ষণাবেক্ষণ চলছে, শীঘ্রই ফিরে আসছি',
-        ...maintenanceData
-      },
-      seo: {
-        metaTitle: 'SHS Bazar - Online Shopping in Kushtia',
-        metaDescription: 'SHS Bazar offers online shopping in Kushtia, Bangladesh.',
-        ...seoData
-      },
-      analytics: {
-        googleAnalyticsId: '',
-        facebookPixelId: '',
-        ...analyticsData
-      }
+    const settingsResult = {
+      delivery: deliverySnap.exists() ? deliverySnap.data() : defaultSettings.delivery,
+      payment: paymentSnap.exists() ? paymentSnap.data() : defaultSettings.payment,
+      general: { ...defaultSettings.general, ...generalData },
+      branding: { ...defaultSettings.branding, ...brandingData },
+      social: { ...defaultSettings.social, ...socialData },
+      order: { ...defaultSettings.order, ...orderData },
+      policies: { ...defaultSettings.policies, ...policiesData },
+      maintenance: { ...defaultSettings.maintenance, ...maintenanceData },
+      seo: { ...defaultSettings.seo, ...seoData },
+      analytics: { ...defaultSettings.analytics, ...analyticsData }
     };
+
+    cachedAdminSettings = settingsResult;
+    try {
+      sessionStorage.setItem('shs_cached_admin_settings', JSON.stringify(settingsResult));
+    } catch (e) {}
+
+    return settingsResult;
   } catch (err) {
-    console.error('Error fetching admin settings:', err);
-    return {
-      delivery: { insideKushtia: 100, outsideKushtia: 160 },
-      payment: { bKashNumber: '01342697743', codEnabled: true },
-      general: {
-        siteName: 'SHS Bazar',
-        hotline: '+8809658183506',
-        supportEmail: 'saripofficialsupport@gmail.com',
-        autoReply: DEFAULT_AUTO_REPLY
-      },
-      branding: { logoUrl: '', faviconUrl: '' },
-      social: {
-        facebookUrl: 'https://facebook.com/shsbazarofficial',
-        whatsappNumber: '01342697743',
-        telegramUrl: 'https://t.me/shsbazarofficial'
-      },
-      order: { minOrderAmount: 0, freeDeliveryThreshold: 0, enableFreeDelivery: false, invoicePrefix: 'SHS-' },
-      policies: { returnPolicyHtml: '', shippingPolicyHtml: '', privacyPolicyHtml: '' },
-      maintenance: { enabled: false, message: 'সাইট রক্ষণাবেক্ষণ চলছে, শীঘ্রই ফিরে আসছি' },
-      seo: { metaTitle: 'SHS Bazar - Online Shopping in Kushtia', metaDescription: 'SHS Bazar offers online shopping in Kushtia, Bangladesh.' },
-      analytics: { googleAnalyticsId: '', facebookPixelId: '' }
-    };
+    console.warn('Error fetching admin settings, using fallback/cached settings:', err);
+    if (cachedAdminSettings) return cachedAdminSettings;
+    return defaultSettings;
   }
 }
 
@@ -148,6 +151,7 @@ export async function saveAdminDeliverySettings(insideKushtia, outsideKushtia) {
     outsideKushtia: Number(outsideKushtia),
     updatedAt: new Date()
   }, { merge: true });
+  clearAdminSettingsCache();
 }
 
 export async function saveAdminBrandingSettings(data) {
@@ -155,6 +159,7 @@ export async function saveAdminBrandingSettings(data) {
     ...data,
     updatedAt: new Date()
   }, { merge: true });
+  clearAdminSettingsCache();
 }
 
 export async function saveAdminSocialSettings(data) {
@@ -162,6 +167,7 @@ export async function saveAdminSocialSettings(data) {
     ...data,
     updatedAt: new Date()
   }, { merge: true });
+  clearAdminSettingsCache();
 }
 
 export async function saveAdminOrderSettings(data) {
@@ -172,6 +178,7 @@ export async function saveAdminOrderSettings(data) {
     invoicePrefix: (data.invoicePrefix || 'SHS-').trim(),
     updatedAt: new Date()
   }, { merge: true });
+  clearAdminSettingsCache();
 }
 
 export async function saveAdminPoliciesSettings(data) {
@@ -179,6 +186,7 @@ export async function saveAdminPoliciesSettings(data) {
     ...data,
     updatedAt: new Date()
   }, { merge: true });
+  clearAdminSettingsCache();
 }
 
 export async function saveAdminMaintenanceSettings(data) {
@@ -187,6 +195,7 @@ export async function saveAdminMaintenanceSettings(data) {
     message: (data.message || '').trim(),
     updatedAt: new Date()
   }, { merge: true });
+  clearAdminSettingsCache();
 }
 
 export async function saveAdminSeoSettings(data) {
@@ -195,6 +204,7 @@ export async function saveAdminSeoSettings(data) {
     metaDescription: (data.metaDescription || '').trim(),
     updatedAt: new Date()
   }, { merge: true });
+  clearAdminSettingsCache();
 }
 
 export async function saveAdminAnalyticsSettings(data) {
@@ -203,6 +213,7 @@ export async function saveAdminAnalyticsSettings(data) {
     facebookPixelId: (data.facebookPixelId || '').trim(),
     updatedAt: new Date()
   }, { merge: true });
+  clearAdminSettingsCache();
 }
 
 export async function saveAdminPaymentSettings(bKashNumber, codEnabled) {
@@ -211,6 +222,7 @@ export async function saveAdminPaymentSettings(bKashNumber, codEnabled) {
     codEnabled: Boolean(codEnabled),
     updatedAt: new Date()
   }, { merge: true });
+  clearAdminSettingsCache();
 }
 
 export async function saveAdminGeneralSettings(data) {
@@ -218,6 +230,7 @@ export async function saveAdminGeneralSettings(data) {
     ...data,
     updatedAt: new Date()
   }, { merge: true });
+  clearAdminSettingsCache();
 }
 
 // -------------------------------------------------------------
